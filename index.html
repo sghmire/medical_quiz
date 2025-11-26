@@ -13,8 +13,33 @@
         input { width: 80%; padding: 12px; margin: 20px 0; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1rem; text-align: center; }
         button { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; }
         .hidden { display: none; }
-        .option-btn { background: #fff; border: 2px solid #e5e7eb; display: block; width:100%; text-align: left; padding: 12px; margin-bottom: 10px; border-radius: 8px; cursor: pointer; }
-        .option-btn.selected { background: var(--primary); color: white; border-color: var(--primary); }
+        
+        /* --- FIXED BUTTON STYLES --- */
+        .option-btn { 
+            background: #ffffff; 
+            color: #1f2937 !important; /* Forces text to be DARK GREY */
+            border: 2px solid #e5e7eb; 
+            display: block; 
+            width: 100%; 
+            text-align: left; 
+            padding: 12px; 
+            margin-bottom: 10px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 1rem;
+        }
+        
+        .option-btn:hover {
+            background-color: #f9fafb;
+            border-color: #2563eb;
+        }
+
+        .option-btn.selected { 
+            background: var(--primary); 
+            color: white !important; /* Forces text to be WHITE only when selected */
+            border-color: var(--primary); 
+        }
+        
         .review-item { text-align: left; background: #f9fafb; padding: 15px; margin-bottom: 10px; border-left: 4px solid #ef4444; }
     </style>
 </head>
@@ -30,13 +55,13 @@
 
     <div id="start-screen" class="card hidden">
         <h1>Topic Selection</h1>
-        <select id="subject-select" style="width:100%; padding:10px; margin-bottom:20px;"></select>
+        <select id="subject-select" style="width:100%; padding:10px; margin-bottom:20px; font-size:1rem;"></select>
         <button onclick="startQuiz()">Start Quiz</button>
     </div>
 
     <div id="quiz-screen" class="card hidden">
         <h2 id="q-header"></h2>
-        <p id="q-text" style="font-size:1.1rem; margin-bottom:20px;"></p>
+        <p id="q-text" style="font-size:1.1rem; margin-bottom:20px; line-height:1.5;"></p>
         <div id="options-container"></div>
         <button id="next-btn" onclick="nextQuestion()" class="hidden" style="margin-top:20px;">Next</button>
     </div>
@@ -60,29 +85,26 @@
             status.innerText = "Downloading encrypted file...";
 
             try {
-                // 1. Fetch the ENCRYPTED file
                 const response = await fetch('questions.json');
-                const encryptedText = await response.text(); // Get raw text
+                if(!response.ok) throw new Error("File not found");
                 
+                const encryptedText = await response.text();
                 status.innerText = "Decrypting...";
 
-                // 2. Decrypt it using the password input
                 const bytes = CryptoJS.AES.decrypt(encryptedText, password);
                 const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
 
                 if (!decryptedData) throw new Error("Wrong Password");
 
-                // 3. Parse JSON
                 questionBank = JSON.parse(decryptedData);
-                
-                // 4. Success! Load App
                 loadSubjects();
+                
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('start-screen').classList.remove('hidden');
 
             } catch (error) {
                 console.error(error);
-                status.innerText = "❌ Decryption Failed. Wrong password or corrupted file.";
+                status.innerText = "❌ Login Failed. Check password.";
                 status.style.color = "red";
             }
         }
@@ -99,12 +121,15 @@
             });
         }
 
-        // --- STANDARD QUIZ LOGIC ---
         function startQuiz() {
             const subject = document.getElementById('subject-select').value;
             let filtered = subject === "All" ? questionBank : questionBank.filter(q => q.subject === subject);
-            if(filtered.length === 0) { alert("No questions!"); return; }
+            
+            if(filtered.length === 0) { alert("No questions found for this subject!"); return; }
+            
+            // Randomize and pick up to 10
             currentQuestions = filtered.sort(() => 0.5 - Math.random()).slice(0, 10);
+            
             currentIndex = 0; score = 0;
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.remove('hidden');
@@ -118,10 +143,11 @@
             const container = document.getElementById('options-container');
             container.innerHTML = '';
             document.getElementById('next-btn').classList.add('hidden');
+
             q.options.forEach(opt => {
                 const btn = document.createElement('button');
                 btn.className = 'option-btn';
-                btn.innerText = opt;
+                btn.innerText = opt; // This text was invisible before!
                 btn.onclick = () => {
                     document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
                     btn.classList.add('selected');
@@ -145,7 +171,11 @@
             document.getElementById('score-display').innerText = Math.round((score/currentQuestions.length)*100) + "%";
             const container = document.getElementById('review-container');
             container.innerHTML = '';
-            currentQuestions.filter(q => q.userSelected !== q.answer).forEach(q => {
+            
+            const wrong = currentQuestions.filter(q => q.userSelected !== q.answer);
+            if(wrong.length === 0) container.innerHTML = "<p>Perfect Score!</p>";
+
+            wrong.forEach(q => {
                 container.innerHTML += `<div class="review-item"><p><strong>${q.question}</strong><br>You: ${q.userSelected}<br>Correct: ${q.answer}</p></div>`;
             });
         }
