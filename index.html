@@ -3,343 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nursing Quiz Pro</title>
+    <title>Secure Nursing Quiz</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* --- MODERN THEME VARIABLES --- */
-        :root {
-            --primary: #2563eb;       /* Vibrant Blue */
-            --primary-dark: #1e40af;  /* Darker Blue for hover */
-            --accent: #3b82f6;        /* Light Blue */
-            --bg-color: #f3f4f6;      /* Light Gray Background */
-            --card-bg: #ffffff;
-            --text-main: #1f2937;     /* Dark Gray text */
-            --text-sub: #6b7280;      /* Muted text */
-            --success: #10b981;       /* Green */
-            --error: #ef4444;         /* Red */
-            --radius: 16px;           /* Rounded corners */
-        }
-
-        /* --- GLOBAL STYLES --- */
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #e0e7ff 0%, #f3f4f6 100%);
-            color: var(--text-main);
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        /* --- CARD DESIGN --- */
-        .card {
-            background: var(--card-bg);
-            width: 100%;
-            max-width: 600px;
-            padding: 40px;
-            border-radius: var(--radius);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
-        }
-
-        /* --- TYPOGRAPHY --- */
-        h1 {
-            font-size: 2rem;
-            font-weight: 800;
-            color: var(--text-main);
-            margin-bottom: 0.5rem;
-            letter-spacing: -0.025em;
-            text-align: center;
-        }
-        
-        h2 { font-weight: 700; color: var(--primary); margin-top: 0; }
-        p { line-height: 1.6; color: var(--text-sub); }
-
-        /* --- FORM ELEMENTS --- */
-        select {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            font-size: 1rem;
-            margin-bottom: 20px;
-            background-color: #fff;
-            color: var(--text-main);
-            outline: none;
-            transition: border-color 0.2s;
-            cursor: pointer;
-        }
-        select:focus { border-color: var(--primary); }
-
-        /* --- BUTTONS --- */
-        button {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        /* Primary Action Button (Start, Next) */
-        .action-btn {
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
-        }
-        .action-btn:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.3);
-        }
-
-        /* Option Buttons (Quiz Choices) */
-        .option-btn {
-            background: #fff;
-            border: 2px solid #e5e7eb;
-            color: var(--text-main);
-            text-align: left;
-            margin-bottom: 12px;
-            position: relative;
-            padding-left: 20px;
-        }
-        .option-btn:hover {
-            border-color: var(--accent);
-            background: #eff6ff;
-        }
-        .option-btn.selected {
-            background: var(--primary);
-            border-color: var(--primary);
-            color: white;
-            transform: scale(1.02);
-        }
-
-        /* --- UTILITIES --- */
+        :root { --primary: #2563eb; --text-main: #1f2937; --radius: 16px; }
+        body { font-family: 'Inter', sans-serif; background: #f3f4f6; color: var(--text-main); display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .card { background: white; width: 100%; max-width: 500px; padding: 40px; border-radius: var(--radius); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); text-align: center; }
+        input { width: 80%; padding: 12px; margin: 20px 0; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1rem; text-align: center; }
+        button { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; }
         .hidden { display: none; }
-        .fade-in { animation: fadeIn 0.4s ease-in; }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* --- REVIEW SECTION --- */
-        .review-item {
-            background: #f9fafb;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-left: 5px solid var(--error);
-        }
-        .correct-tag { color: var(--success); font-weight: bold; }
-        .wrong-tag { color: var(--error); font-weight: bold; text-decoration: line-through; margin-right: 10px; }
-        .badge {
-            display: inline-block;
-            background: #e0e7ff;
-            color: var(--primary);
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-
-        /* Score Display */
-        .score-circle {
-            width: 100px;
-            height: 100px;
-            background: var(--primary);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            font-weight: bold;
-            margin: 0 auto 20px auto;
-            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
-        }
+        .option-btn { background: #fff; border: 2px solid #e5e7eb; display: block; width:100%; text-align: left; padding: 12px; margin-bottom: 10px; border-radius: 8px; cursor: pointer; }
+        .option-btn.selected { background: var(--primary); color: white; border-color: var(--primary); }
+        .review-item { text-align: left; background: #f9fafb; padding: 15px; margin-bottom: 10px; border-left: 4px solid #ef4444; }
     </style>
 </head>
 <body>
 
-    <div id="start-screen" class="card fade-in">
-        <div style="text-align: center; margin-bottom: 20px;">
-            <span class="badge">NURSING PREP</span>
-            <h1>Knowledge Check</h1>
-            <p>Select a topic to begin your practice session.</p>
-        </div>
+    <div id="login-screen" class="card">
+        <h2>🔒 Secure Database</h2>
+        <p>Enter password to decrypt questions:</p>
+        <input type="password" id="password-input" placeholder="Password">
+        <button onclick="unlockDatabase()">Decrypt & Enter</button>
+        <p id="status-msg" style="margin-top:10px; color:#666; font-size:0.9rem;"></p>
+    </div>
 
-        <p id="loading-msg" style="text-align:center;">Loading database...</p>
-
-        <div id="selection-area" class="hidden">
-            <select id="subject-select">
-                <option value="All">Mix All Subjects</option>
-                </select>
-            <button class="action-btn" onclick="startQuiz()">Start Quiz</button>
-        </div>
+    <div id="start-screen" class="card hidden">
+        <h1>Topic Selection</h1>
+        <select id="subject-select" style="width:100%; padding:10px; margin-bottom:20px;"></select>
+        <button onclick="startQuiz()">Start Quiz</button>
     </div>
 
     <div id="quiz-screen" class="card hidden">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <span class="badge" id="subject-badge">Anatomy</span>
-            <span style="font-size: 0.9rem; color: var(--text-sub);" id="question-count">1/10</span>
-        </div>
-        
-        <h2 id="question-text" style="font-size: 1.25rem; margin-bottom: 25px; line-height: 1.5;">Loading...</h2>
-        
+        <h2 id="q-header"></h2>
+        <p id="q-text" style="font-size:1.1rem; margin-bottom:20px;"></p>
         <div id="options-container"></div>
-        
-        <button id="next-btn" onclick="nextQuestion()" class="action-btn hidden" style="margin-top: 20px;">Confirm & Next</button>
+        <button id="next-btn" onclick="nextQuestion()" class="hidden" style="margin-top:20px;">Next</button>
     </div>
 
     <div id="result-screen" class="card hidden">
-        <div style="text-align: center;">
-            <h2>Session Complete</h2>
-            <div class="score-circle" id="score-display">0/0</div>
-            <p id="score-message">Great effort!</p>
-        </div>
-        
-        <div id="review-container" style="margin-top: 30px;"></div>
-        
-        <button class="action-btn" onclick="location.reload()" style="margin-top: 20px;">Start New Session</button>
+        <h2>Result</h2>
+        <h1 id="score-display">0%</h1>
+        <div id="review-container"></div>
+        <button onclick="location.reload()" style="margin-top:20px;">Restart</button>
     </div>
 
     <script>
-        // --- JAVASCRIPT LOGIC (SAME AS BEFORE, JUST RE-CONNECTED) ---
         let questionBank = [];
         let currentQuestions = [];
         let currentIndex = 0;
         let score = 0;
 
-        window.onload = async function() {
-            try {
-                // Fetch the separate data file
-                const response = await fetch('questions.json');
-                if (!response.ok) throw new Error("Could not find questions.json");
-                
-                questionBank = await response.json();
-                
-                // Populate Dropdown
-                const subjects = [...new Set(questionBank.map(q => q.subject))];
-                const select = document.getElementById('subject-select');
-                subjects.forEach(sub => {
-                    const opt = document.createElement('option');
-                    opt.value = sub;
-                    opt.innerText = sub;
-                    select.appendChild(opt);
-                });
+        async function unlockDatabase() {
+            const status = document.getElementById('status-msg');
+            const password = document.getElementById('password-input').value;
+            status.innerText = "Downloading encrypted file...";
 
-                document.getElementById('loading-msg').classList.add('hidden');
-                document.getElementById('selection-area').classList.remove('hidden');
+            try {
+                // 1. Fetch the ENCRYPTED file
+                const response = await fetch('questions.json');
+                const encryptedText = await response.text(); // Get raw text
+                
+                status.innerText = "Decrypting...";
+
+                // 2. Decrypt it using the password input
+                const bytes = CryptoJS.AES.decrypt(encryptedText, password);
+                const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
+
+                if (!decryptedData) throw new Error("Wrong Password");
+
+                // 3. Parse JSON
+                questionBank = JSON.parse(decryptedData);
+                
+                // 4. Success! Load App
+                loadSubjects();
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('start-screen').classList.remove('hidden');
 
             } catch (error) {
-                document.getElementById('loading-msg').innerText = "Error: Could not load questions.json";
-                document.getElementById('loading-msg').style.color = "red";
                 console.error(error);
+                status.innerText = "❌ Decryption Failed. Wrong password or corrupted file.";
+                status.style.color = "red";
             }
-        };
+        }
 
+        function loadSubjects() {
+            const subjects = [...new Set(questionBank.map(q => q.subject))];
+            const select = document.getElementById('subject-select');
+            select.innerHTML = '<option value="All">Mix All Subjects</option>';
+            subjects.forEach(sub => {
+                const opt = document.createElement('option');
+                opt.value = sub;
+                opt.innerText = sub;
+                select.appendChild(opt);
+            });
+        }
+
+        // --- STANDARD QUIZ LOGIC ---
         function startQuiz() {
             const subject = document.getElementById('subject-select').value;
-            
-            let filtered = subject === "All" 
-                ? questionBank 
-                : questionBank.filter(q => q.subject === subject);
-
-            if(filtered.length === 0) { alert("No questions found!"); return; }
-
-            // Shuffle and pick 10
+            let filtered = subject === "All" ? questionBank : questionBank.filter(q => q.subject === subject);
+            if(filtered.length === 0) { alert("No questions!"); return; }
             currentQuestions = filtered.sort(() => 0.5 - Math.random()).slice(0, 10);
-            
-            currentIndex = 0;
-            score = 0;
-            
+            currentIndex = 0; score = 0;
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.remove('hidden');
-            document.getElementById('quiz-screen').classList.add('fade-in');
             loadQuestion();
         }
 
         function loadQuestion() {
             const q = currentQuestions[currentIndex];
-            
-            // Update UI
-            document.getElementById('question-count').innerText = `Question ${currentIndex + 1} of ${currentQuestions.length}`;
-            document.getElementById('question-text').innerText = q.question;
-            document.getElementById('subject-badge').innerText = q.subject.toUpperCase();
-            
+            document.getElementById('q-header').innerText = `Q ${currentIndex + 1}/${currentQuestions.length}`;
+            document.getElementById('q-text').innerText = q.question;
             const container = document.getElementById('options-container');
-            container.innerHTML = ''; 
+            container.innerHTML = '';
             document.getElementById('next-btn').classList.add('hidden');
-
             q.options.forEach(opt => {
                 const btn = document.createElement('button');
                 btn.className = 'option-btn';
                 btn.innerText = opt;
-                btn.onclick = () => selectOption(btn, opt);
+                btn.onclick = () => {
+                    document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    q.userSelected = opt;
+                    document.getElementById('next-btn').classList.remove('hidden');
+                };
                 container.appendChild(btn);
             });
         }
 
-        function selectOption(btn, selectedText) {
-            document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
-            btn.classList.add('selected');
-            currentQuestions[currentIndex].userSelected = selectedText;
-            document.getElementById('next-btn').classList.remove('hidden');
-        }
-
         function nextQuestion() {
-            const q = currentQuestions[currentIndex];
-            if (q.userSelected === q.answer) {
-                score++;
-                q.isCorrect = true;
-            } else {
-                q.isCorrect = false;
-            }
-
+            if(currentQuestions[currentIndex].userSelected === currentQuestions[currentIndex].answer) score++;
             currentIndex++;
-            if (currentIndex < currentQuestions.length) {
-                loadQuestion();
-            } else {
-                showResults();
-            }
+            if(currentIndex < currentQuestions.length) loadQuestion();
+            else showResults();
         }
 
         function showResults() {
             document.getElementById('quiz-screen').classList.add('hidden');
             document.getElementById('result-screen').classList.remove('hidden');
-            document.getElementById('result-screen').classList.add('fade-in');
-            
-            const percentage = Math.round((score / currentQuestions.length) * 100);
-            document.getElementById('score-display').innerText = `${percentage}%`;
-            
-            if(percentage >= 80) document.getElementById('score-message').innerText = "Excellent Work! 🌟";
-            else if(percentage >= 50) document.getElementById('score-message').innerText = "Good Practice! Keep going.";
-            else document.getElementById('score-message').innerText = "Review the topics below.";
-
+            document.getElementById('score-display').innerText = Math.round((score/currentQuestions.length)*100) + "%";
             const container = document.getElementById('review-container');
-            container.innerHTML = '<h3 style="margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">Review Incorrect Answers</h3>';
-
-            const wrongAnswers = currentQuestions.filter(q => !q.isCorrect);
-            
-            if (wrongAnswers.length === 0) {
-                container.innerHTML += "<p style='text-align:center; color:var(--success);'>No incorrect answers to review!</p>";
-            } else {
-                wrongAnswers.forEach(q => {
-                    container.innerHTML += `
-                        <div class="review-item">
-                            <p style="margin-top:0; font-weight:600;">${q.question}</p>
-                            <p><span class="wrong-tag">You: ${q.userSelected}</span> <span class="correct-tag">Correct: ${q.answer}</span></p>
-                            <p style="font-size:0.9rem; color:var(--text-sub); margin-bottom:0;"><em>💡 ${q.rationale}</em></p>
-                        </div>
-                    `;
-                });
-            }
+            container.innerHTML = '';
+            currentQuestions.filter(q => q.userSelected !== q.answer).forEach(q => {
+                container.innerHTML += `<div class="review-item"><p><strong>${q.question}</strong><br>You: ${q.userSelected}<br>Correct: ${q.answer}</p></div>`;
+            });
         }
     </script>
 </body>
