@@ -3,60 +3,222 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OpenRN Nursing Quiz</title>
+    <title>Nursing Quiz Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #005f73; --light: #e0fbfc; --error: #ae2012; --success: #0a9396; }
-        body { font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f4f4f9; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        h1, h2 { color: var(--primary); }
-        button { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px; }
-        button:hover { opacity: 0.9; }
-        .option-btn { display: block; width: 100%; text-align: left; margin: 5px 0; background: #fff; border: 1px solid #ccc; color: #333; }
-        .option-btn.selected { background: var(--light); border-color: var(--primary); font-weight: bold; }
+        /* --- MODERN THEME VARIABLES --- */
+        :root {
+            --primary: #2563eb;       /* Vibrant Blue */
+            --primary-dark: #1e40af;  /* Darker Blue for hover */
+            --accent: #3b82f6;        /* Light Blue */
+            --bg-color: #f3f4f6;      /* Light Gray Background */
+            --card-bg: #ffffff;
+            --text-main: #1f2937;     /* Dark Gray text */
+            --text-sub: #6b7280;      /* Muted text */
+            --success: #10b981;       /* Green */
+            --error: #ef4444;         /* Red */
+            --radius: 16px;           /* Rounded corners */
+        }
+
+        /* --- GLOBAL STYLES --- */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #e0e7ff 0%, #f3f4f6 100%);
+            color: var(--text-main);
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* --- CARD DESIGN --- */
+        .card {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 600px;
+            padding: 40px;
+            border-radius: var(--radius);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        /* --- TYPOGRAPHY --- */
+        h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.025em;
+            text-align: center;
+        }
+        
+        h2 { font-weight: 700; color: var(--primary); margin-top: 0; }
+        p { line-height: 1.6; color: var(--text-sub); }
+
+        /* --- FORM ELEMENTS --- */
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            background-color: #fff;
+            color: var(--text-main);
+            outline: none;
+            transition: border-color 0.2s;
+            cursor: pointer;
+        }
+        select:focus { border-color: var(--primary); }
+
+        /* --- BUTTONS --- */
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        /* Primary Action Button (Start, Next) */
+        .action-btn {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+        }
+        .action-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.3);
+        }
+
+        /* Option Buttons (Quiz Choices) */
+        .option-btn {
+            background: #fff;
+            border: 2px solid #e5e7eb;
+            color: var(--text-main);
+            text-align: left;
+            margin-bottom: 12px;
+            position: relative;
+            padding-left: 20px;
+        }
+        .option-btn:hover {
+            border-color: var(--accent);
+            background: #eff6ff;
+        }
+        .option-btn.selected {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            transform: scale(1.02);
+        }
+
+        /* --- UTILITIES --- */
         .hidden { display: none; }
-        .review-item { border-bottom: 1px solid #eee; padding: 10px 0; }
-        .correct-text { color: var(--success); font-weight: bold; }
-        .wrong-text { color: var(--error); font-weight: bold; }
-        #loading-msg { color: #666; font-style: italic; }
+        .fade-in { animation: fadeIn 0.4s ease-in; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- REVIEW SECTION --- */
+        .review-item {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 5px solid var(--error);
+        }
+        .correct-tag { color: var(--success); font-weight: bold; }
+        .wrong-tag { color: var(--error); font-weight: bold; text-decoration: line-through; margin-right: 10px; }
+        .badge {
+            display: inline-block;
+            background: #e0e7ff;
+            color: var(--primary);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        /* Score Display */
+        .score-circle {
+            width: 100px;
+            height: 100px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0 auto 20px auto;
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+        }
     </style>
 </head>
 <body>
 
-    <div id="start-screen" class="card">
-        <h1>Nursing Quiz (OER)</h1>
-        <p id="loading-msg">Loading question bank...</p>
+    <div id="start-screen" class="card fade-in">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <span class="badge">NURSING PREP</span>
+            <h1>Knowledge Check</h1>
+            <p>Select a topic to begin your practice session.</p>
+        </div>
+
+        <p id="loading-msg" style="text-align:center;">Loading database...</p>
+
         <div id="selection-area" class="hidden">
-            <p>Select a subject to begin:</p>
-            <select id="subject-select" style="padding: 10px; width: 100%; margin-bottom: 15px;">
-                <option value="All">All Subjects</option>
+            <select id="subject-select">
+                <option value="All">Mix All Subjects</option>
                 </select>
-            <button onclick="startQuiz()">Start Quiz</button>
+            <button class="action-btn" onclick="startQuiz()">Start Quiz</button>
         </div>
     </div>
 
     <div id="quiz-screen" class="card hidden">
-        <h2 id="question-header">Question 1/10</h2>
-        <p id="question-text">Loading...</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <span class="badge" id="subject-badge">Anatomy</span>
+            <span style="font-size: 0.9rem; color: var(--text-sub);" id="question-count">1/10</span>
+        </div>
+        
+        <h2 id="question-text" style="font-size: 1.25rem; margin-bottom: 25px; line-height: 1.5;">Loading...</h2>
+        
         <div id="options-container"></div>
-        <button id="next-btn" onclick="nextQuestion()" class="hidden">Next Question</button>
+        
+        <button id="next-btn" onclick="nextQuestion()" class="action-btn hidden" style="margin-top: 20px;">Confirm & Next</button>
     </div>
 
     <div id="result-screen" class="card hidden">
-        <h2>Quiz Complete!</h2>
-        <p>Your Score: <span id="score-display" style="font-weight:bold; font-size:1.2em;"></span></p>
-        <div id="review-container"></div>
-        <button onclick="location.reload()">Take Another Quiz</button>
+        <div style="text-align: center;">
+            <h2>Session Complete</h2>
+            <div class="score-circle" id="score-display">0/0</div>
+            <p id="score-message">Great effort!</p>
+        </div>
+        
+        <div id="review-container" style="margin-top: 30px;"></div>
+        
+        <button class="action-btn" onclick="location.reload()" style="margin-top: 20px;">Start New Session</button>
     </div>
 
     <script>
+        // --- JAVASCRIPT LOGIC (SAME AS BEFORE, JUST RE-CONNECTED) ---
         let questionBank = [];
         let currentQuestions = [];
         let currentIndex = 0;
         let score = 0;
 
-        // 1. FETCH DATA ON LOAD
         window.onload = async function() {
             try {
+                // Fetch the separate data file
                 const response = await fetch('questions.json');
                 if (!response.ok) throw new Error("Could not find questions.json");
                 
@@ -76,7 +238,8 @@
                 document.getElementById('selection-area').classList.remove('hidden');
 
             } catch (error) {
-                document.getElementById('loading-msg').innerText = "Error loading questions. Make sure questions.json exists!";
+                document.getElementById('loading-msg').innerText = "Error: Could not load questions.json";
+                document.getElementById('loading-msg').style.color = "red";
                 console.error(error);
             }
         };
@@ -88,7 +251,7 @@
                 ? questionBank 
                 : questionBank.filter(q => q.subject === subject);
 
-            if(filtered.length === 0) { alert("No questions found for this subject!"); return; }
+            if(filtered.length === 0) { alert("No questions found!"); return; }
 
             // Shuffle and pick 10
             currentQuestions = filtered.sort(() => 0.5 - Math.random()).slice(0, 10);
@@ -98,13 +261,17 @@
             
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.remove('hidden');
+            document.getElementById('quiz-screen').classList.add('fade-in');
             loadQuestion();
         }
 
         function loadQuestion() {
             const q = currentQuestions[currentIndex];
-            document.getElementById('question-header').innerText = `Question ${currentIndex + 1}/${currentQuestions.length}`;
+            
+            // Update UI
+            document.getElementById('question-count').innerText = `Question ${currentIndex + 1} of ${currentQuestions.length}`;
             document.getElementById('question-text').innerText = q.question;
+            document.getElementById('subject-badge').innerText = q.subject.toUpperCase();
             
             const container = document.getElementById('options-container');
             container.innerHTML = ''; 
@@ -146,23 +313,29 @@
         function showResults() {
             document.getElementById('quiz-screen').classList.add('hidden');
             document.getElementById('result-screen').classList.remove('hidden');
-            document.getElementById('score-display').innerText = `${score} / ${currentQuestions.length}`;
+            document.getElementById('result-screen').classList.add('fade-in');
             
+            const percentage = Math.round((score / currentQuestions.length) * 100);
+            document.getElementById('score-display').innerText = `${percentage}%`;
+            
+            if(percentage >= 80) document.getElementById('score-message').innerText = "Excellent Work! 🌟";
+            else if(percentage >= 50) document.getElementById('score-message').innerText = "Good Practice! Keep going.";
+            else document.getElementById('score-message').innerText = "Review the topics below.";
+
             const container = document.getElementById('review-container');
-            container.innerHTML = '<h3>Review Wrong Answers:</h3>';
+            container.innerHTML = '<h3 style="margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">Review Incorrect Answers</h3>';
 
             const wrongAnswers = currentQuestions.filter(q => !q.isCorrect);
             
             if (wrongAnswers.length === 0) {
-                container.innerHTML += "<p>Perfect score! Great job.</p>";
+                container.innerHTML += "<p style='text-align:center; color:var(--success);'>No incorrect answers to review!</p>";
             } else {
                 wrongAnswers.forEach(q => {
                     container.innerHTML += `
                         <div class="review-item">
-                            <p><strong>Q:</strong> ${q.question}</p>
-                            <p class="wrong-text">You chose: ${q.userSelected}</p>
-                            <p class="correct-text">Correct: ${q.answer}</p>
-                            <p><em>Rationale: ${q.rationale}</em></p>
+                            <p style="margin-top:0; font-weight:600;">${q.question}</p>
+                            <p><span class="wrong-tag">You: ${q.userSelected}</span> <span class="correct-tag">Correct: ${q.answer}</span></p>
+                            <p style="font-size:0.9rem; color:var(--text-sub); margin-bottom:0;"><em>💡 ${q.rationale}</em></p>
                         </div>
                     `;
                 });
