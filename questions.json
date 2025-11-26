@@ -1,0 +1,90 @@
+[
+  {
+    "id": 1,
+    "subject": "Anatomy",
+    "question": "In the anatomical position, the palms face:",
+    "options": ["Posterior", "Anterior", "Medial", "Lateral"],
+    "answer": "Anterior",
+    "rationale": "Standard anatomical position requires palms facing forward."
+  },
+  {
+    "id": 2,
+    "subject": "Microbiology",
+    "question": "Which organelle produces ATP?",
+    "options": ["Ribosome", "Nucleus", "Mitochondria", "Golgi"],
+    "answer": "Mitochondria",
+    "rationale": "Mitochondria are the powerhouse of the cell."
+  },
+  {
+    "id": 3,
+    "subject": "Physiology",
+    "question": "Normal blood pH is:",
+    "options": ["7.0-7.1", "7.25-7.35", "7.35-7.45", "7.55-7.65"],
+    "answer": "7.35-7.45",
+    "rationale": "Human blood is slightly alkaline."
+  },
+  {
+    "id": 4,
+    "subject": "Nutrition",
+    "question": "Which macronutrient has 9 kcal/g?",
+    "options": ["Carbs", "Protein", "Fats", "Water"],
+    "answer": "Fats",
+    "rationale": "Fats are the most energy-dense nutrient."
+  },
+  {
+    "id": 5,
+    "subject": "Microbiology",
+    "question": "Gram-positive bacteria stain what color?",
+    "options": ["Pink", "Purple", "Green", "Red"],
+    "answer": "Purple",
+    "rationale": "Thick peptidoglycan retains the crystal violet stain."
+  },
+  {
+    "id": 6,
+    "subject": "Anatomy",
+    "question": "Which bone is the longest in the body?",
+    "options": ["Femur", "Humerus", "Tibia", "Fibula"],
+    "answer": "Femur",
+    "rationale": "The thigh bone (femur) is the longest and strongest."
+  },
+  {
+    "id": 7,
+    "subject": "Microbiology",
+    "question": "What is a nosocomial infection?",
+    "options": ["Animal acquired", "Hospital acquired", "Community acquired", "Unknown origin"],
+    "answer": "Hospital acquired",
+    "rationale": "Nosocomial means originating in a hospital."
+  },
+  {
+    "id": 8,
+    "subject": "Nutrition",
+    "question": "Vitamin C is:",
+    "options": ["Fat soluble", "Water soluble", "Stored in liver", "Toxic in small doses"],
+    "answer": "Water soluble",
+    "rationale": "Excess Vitamin C is excreted in urine."
+  },
+  {
+    "id": 9,
+    "subject": "Physiology",
+    "question": "Water moving to high solute concentration is:",
+    "options": ["Diffusion", "Osmosis", "Active Transport", "Filtration"],
+    "answer": "Osmosis",
+    "rationale": "Osmosis is the movement of water across a membrane."
+  },
+  {
+    "id": 10,
+    "subject": "Anatomy",
+    "question": "The mitral valve is on which side of the heart?",
+    "options": ["Left", "Right", "Both", "None"],
+    "answer": "Left",
+    "rationale": "It is between the left atrium and ventricle."
+  },
+  {
+    "id": 11,
+    "subject": "Nutrition",
+    "question": "Iron deficiency causes:",
+    "options": ["Scurvy", "Anemia", "Rickets", "Beriberi"],
+    "answer": "Anemia",
+    "rationale": "Iron is essential for hemoglobin production."
+  }
+]
