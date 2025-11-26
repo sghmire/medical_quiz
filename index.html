@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenRN Nursing Quiz</title>
+    <style>
+        :root { --primary: #005f73; --light: #e0fbfc; --error: #ae2012; --success: #0a9396; }
+        body { font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f4f4f9; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h1, h2 { color: var(--primary); }
+        button { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px; }
+        button:hover { opacity: 0.9; }
+        .option-btn { display: block; width: 100%; text-align: left; margin: 5px 0; background: #fff; border: 1px solid #ccc; color: #333; }
+        .option-btn.selected { background: var(--light); border-color: var(--primary); font-weight: bold; }
+        .hidden { display: none; }
+        .review-item { border-bottom: 1px solid #eee; padding: 10px 0; }
+        .correct-text { color: var(--success); font-weight: bold; }
+        .wrong-text { color: var(--error); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div id="start-screen" class="card">
+        <h1>Nursing Quiz (OER)</h1>
+        <p>Select a subject to begin:</p>
+        <select id="subject-select" style="padding: 10px; width: 100%; margin-bottom: 15px;">
+            <option value="All">All Subjects</option>
+            <option value="Anatomy">Anatomy & Physiology</option>
+            <option value="Microbiology">Microbiology</option>
+            <option value="Nutrition">Nutrition</option>
+        </select>
+        <button onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <div id="quiz-screen" class="card hidden">
+        <h2 id="question-header">Question 1/10</h2>
+        <p id="question-text">Loading...</p>
+        <div id="options-container"></div>
+        <button id="next-btn" onclick="nextQuestion()" class="hidden">Next Question</button>
+    </div>
+
+    <div id="result-screen" class="card hidden">
+        <h2>Quiz Complete!</h2>
+        <p>Your Score: <span id="score-display" style="font-weight:bold; font-size:1.2em;"></span></p>
+        <div id="review-container"></div>
+        <button onclick="location.reload()">Take Another Quiz</button>
+    </div>
+
+    <script>
+        // --- DATA SECTION: PASTE YOUR JSON DATA HERE LATER ---
+        const questionBank = [
+            { id: 1, subject: "Anatomy", question: "In the anatomical position, the palms face:", options: ["Posterior", "Anterior", "Medial", "Lateral"], answer: "Anterior", rationale: "Standard anatomical position requires palms facing forward." },
+            { id: 2, subject: "Anatomy", question: "Which organelle produces ATP?", options: ["Ribosome", "Nucleus", "Mitochondria", "Golgi"], answer: "Mitochondria", rationale: "Mitochondria are the powerhouse of the cell." },
+            { id: 3, subject: "Physiology", question: "Normal blood pH is:", options: ["7.0-7.1", "7.25-7.35", "7.35-7.45", "7.55-7.65"], answer: "7.35-7.45", rationale: "Human blood is slightly alkaline." },
+            { id: 4, subject: "Nutrition", question: "Which macronutrient has 9 kcal/g?", options: ["Carbs", "Protein", "Fats", "Water"], answer: "Fats", rationale: "Fats are the most energy-dense nutrient." },
+            { id: 5, subject: "Microbiology", question: "Gram-positive bacteria stain what color?", options: ["Pink", "Purple", "Green", "Red"], answer: "Purple", rationale: "Thick peptidoglycan retains the crystal violet stain." },
+            { id: 6, subject: "Anatomy", question: "Which bone is the longest in the body?", options: ["Femur", "Humerus", "Tibia", "Fibula"], answer: "Femur", rationale: "The thigh bone (femur) is the longest and strongest." },
+            { id: 7, subject: "Microbiology", question: "What is a nosocomial infection?", options: ["Animal acquired", "Hospital acquired", "Community acquired", "Unknown origin"], answer: "Hospital acquired", rationale: "Nosocomial means originating in a hospital." },
+            { id: 8, subject: "Nutrition", question: "Vitamin C is:", options: ["Fat soluble", "Water soluble", "Stored in liver", "Toxic in small doses"], answer: "Water soluble", rationale: "Excess Vitamin C is excreted in urine." },
+            { id: 9, subject: "Physiology", question: "Water moving to high solute concentration is:", options: ["Diffusion", "Osmosis", "Active Transport", "Filtration"], answer: "Osmosis", rationale: "Osmosis is the movement of water across a membrane." },
+            { id: 10, subject: "Anatomy", question: "The mitral valve is on which side of the heart?", options: ["Left", "Right", "Both", "None"], answer: "Left", rationale: "It is between the left atrium and ventricle." },
+            { id: 11, subject: "Nutrition", question: "Iron deficiency causes:", options: ["Scurvy", "Anemia", "Rickets", "Beriberi"], answer: "Anemia", rationale: "Iron is essential for hemoglobin production." }
+        ];
+
+        // --- APP LOGIC ---
+        let currentQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let userAnswers = [];
+
+        function startQuiz() {
+            const subject = document.getElementById('subject-select').value;
+            
+            // 1. Filter Questions
+            let filtered = subject === "All" 
+                ? questionBank 
+                : questionBank.filter(q => q.subject === subject);
+
+            if(filtered.length === 0) { alert("No questions found for this subject!"); return; }
+
+            // 2. Shuffle and pick 10
+            currentQuestions = filtered.sort(() => 0.5 - Math.random()).slice(0, 10);
+            
+            // 3. Reset variables
+            currentIndex = 0;
+            score = 0;
+            userAnswers = [];
+            
+            // 4. Switch Screens
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const q = currentQuestions[currentIndex];
+            document.getElementById('question-header').innerText = `Question ${currentIndex + 1}/${currentQuestions.length}`;
+            document.getElementById('question-text').innerText = q.question;
+            
+            const container = document.getElementById('options-container');
+            container.innerHTML = ''; // Clear previous options
+            document.getElementById('next-btn').classList.add('hidden');
+
+            q.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => selectOption(btn, opt);
+                container.appendChild(btn);
+            });
+        }
+
+        function selectOption(btn, selectedText) {
+            // Remove 'selected' from all buttons
+            document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+            // Add to clicked button
+            btn.classList.add('selected');
+            
+            // Save answer temporarily
+            currentQuestions[currentIndex].userSelected = selectedText;
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            const q = currentQuestions[currentIndex];
+            
+            // Check correctness
+            if (q.userSelected === q.answer) {
+                score++;
+                q.isCorrect = true;
+            } else {
+                q.isCorrect = false;
+            }
+
+            currentIndex++;
+            if (currentIndex < currentQuestions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            
+            document.getElementById('score-display').innerText = `${score} / ${currentQuestions.length}`;
+            
+            const container = document.getElementById('review-container');
+            container.innerHTML = '<h3>Review Wrong Answers:</h3>';
+
+            const wrongAnswers = currentQuestions.filter(q => !q.isCorrect);
+            
+            if (wrongAnswers.length === 0) {
+                container.innerHTML += "<p>Perfect score! Great job.</p>";
+            } else {
+                wrongAnswers.forEach(q => {
+                    container.innerHTML += `
+                        <div class="review-item">
+                            <p><strong>Q:</strong> ${q.question}</p>
+                            <p class="wrong-text">You chose: ${q.userSelected}</p>
+                            <p class="correct-text">Correct: ${q.answer}</p>
+                            <p><em>Rationale: ${q.rationale}</em></p>
+                        </div>
+                    `;
+                });
+            }
+        }
+    </script>
+</body>
+</html>
