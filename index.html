@@ -4,29 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nursing Quiz Pro</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #2563eb; --text-main: #1f2937; --radius: 12px; }
         body { font-family: 'Inter', sans-serif; background: #f3f4f6; color: var(--text-main); margin: 0; padding-top: 60px; }
         
-        /* --- NAVIGATION BAR --- */
         nav { position: fixed; top: 0; left: 0; width: 100%; height: 60px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; align-items: center; padding: 0 20px; box-sizing: border-box; z-index: 100; }
         .nav-title { font-weight: 700; font-size: 1.2rem; color: var(--primary); margin-right: auto; }
         .nav-btn { background: none; border: none; color: #6b7280; font-weight: 600; cursor: pointer; font-size: 0.9rem; padding: 8px 12px; border-radius: 6px; }
         .nav-btn:hover { background: #f3f4f6; color: var(--text-main); }
 
-        /* --- LAYOUT --- */
         .container { max-width: 500px; margin: 20px auto; padding: 20px; }
         .card { background: white; padding: 30px; border-radius: var(--radius); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); text-align: center; }
         
-        /* --- ELEMENTS --- */
-        input { width: 80%; padding: 12px; margin: 20px 0; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1rem; text-align: center; }
         button { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; font-size: 1rem; transition: transform 0.1s; }
         button:active { transform: scale(0.98); }
         .hidden { display: none; }
 
-        /* --- QUIZ OPTIONS --- */
         .option-btn { 
             background: #ffffff; 
             color: #1f2937 !important; 
@@ -48,12 +43,9 @@
     </nav>
 
     <div class="container">
-        <div id="login-screen" class="card">
-            <h2>Secure Access</h2>
-            <p>Please login to decrypt the database.</p>
-            <input type="password" id="password-input" placeholder="Enter Password">
-            <button onclick="unlockDatabase()">Decrypt</button>
-            <p id="status-msg" style="margin-top:10px; color:#666; font-size:0.9rem;"></p>
+        <div id="loading-screen" class="card">
+            <h2>Connecting...</h2>
+            <p>Fetching database from Supabase.</p>
         </div>
 
         <div id="start-screen" class="card hidden">
@@ -84,41 +76,46 @@
     </div>
 
     <script>
+        // --- CONFIGURE SUPABASE HERE ---
+        const SUPABASE_URL = "https://ilsmjyvpduvmkxoxcqin.supabase.co"; 
+        const SUPABASE_KEY = "sb_publishable_7ZI3V6f0ckuxpASg3febTw_E_oxey_I";
+        
+        // Initialize Client
+        const { createClient } = supabase;
+        const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
         let questionBank = [];
         let currentQuestions = [];
         let currentIndex = 0;
         let score = 0;
 
-        async function unlockDatabase() {
-            const status = document.getElementById('status-msg');
-            const password = document.getElementById('password-input').value;
-            
-            // Allow "Enter" key to submit
-            if(!password) return;
-            
-            status.innerText = "Decrypting...";
-
+        // 1. FETCH DATA ON LOAD
+        window.onload = async function() {
             try {
-                const response = await fetch('questions.json');
-                const encryptedText = await response.text();
-                const bytes = CryptoJS.AES.decrypt(encryptedText, password);
-                const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
+                // Fetch from 'questions' table
+                let { data, error } = await _supabase
+                    .from('questions')
+                    .select('*');
 
-                if (!decryptedData) throw new Error("Wrong Password");
-
-                questionBank = JSON.parse(decryptedData);
-                loadSubjects();
+                if (error) throw error;
                 
-                // Show Home Button and Menu
-                document.getElementById('home-btn').classList.remove('hidden');
-                goHome(); // Switch to home screen
+                questionBank = data;
+                
+                if(questionBank.length === 0) {
+                    alert("Database connected, but the table is empty! Add a row in Supabase.");
+                } else {
+                    loadSubjects();
+                    document.getElementById('loading-screen').classList.add('hidden');
+                    document.getElementById('start-screen').classList.remove('hidden');
+                    document.getElementById('home-btn').classList.remove('hidden');
+                }
 
-            } catch (error) {
-                console.error(error);
-                status.innerText = "❌ Incorrect Password";
-                status.style.color = "red";
+            } catch (err) {
+                console.error("Error:", err);
+                document.querySelector('#loading-screen h2').innerText = "Connection Failed";
+                document.querySelector('#loading-screen p').innerText = "Check your Supabase URL/Key in index.html";
             }
-        }
+        };
 
         function loadSubjects() {
             const subjects = [...new Set(questionBank.map(q => q.subject))];
@@ -134,12 +131,8 @@
 
         // --- NAVIGATION LOGIC ---
         function goHome() {
-            // Hide all screens
-            document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.add('hidden');
             document.getElementById('result-screen').classList.add('hidden');
-            
-            // Show start screen
             document.getElementById('start-screen').classList.remove('hidden');
         }
 
@@ -149,11 +142,9 @@
             
             if(filtered.length === 0) { alert("No questions found!"); return; }
             
-            // Random 10
             currentQuestions = filtered.sort(() => 0.5 - Math.random()).slice(0, 10);
             currentIndex = 0; score = 0;
             
-            // Update UI
             document.getElementById('topic-badge').innerText = subject;
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.remove('hidden');
@@ -169,7 +160,11 @@
             container.innerHTML = '';
             document.getElementById('next-btn').classList.add('hidden');
 
-            q.options.forEach(opt => {
+            // Handle options (parse if it's a string, use directly if object)
+            let opts = q.options;
+            if (typeof opts === 'string') opts = JSON.parse(opts);
+
+            opts.forEach(opt => {
                 const btn = document.createElement('button');
                 btn.className = 'option-btn';
                 btn.innerText = opt;
