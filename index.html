@@ -10,55 +10,73 @@
         :root { --primary: #2563eb; --text-main: #1f2937; --radius: 12px; }
         body { font-family: 'Inter', sans-serif; background: #f3f4f6; color: var(--text-main); margin: 0; padding-top: 60px; }
         
+        /* NAV */
         nav { position: fixed; top: 0; left: 0; width: 100%; height: 60px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; align-items: center; padding: 0 20px; box-sizing: border-box; z-index: 100; }
         .nav-title { font-weight: 700; font-size: 1.2rem; color: var(--primary); margin-right: auto; }
         .nav-btn { background: none; border: none; color: #6b7280; font-weight: 600; cursor: pointer; font-size: 0.9rem; padding: 8px 12px; border-radius: 6px; }
         .nav-btn:hover { background: #f3f4f6; color: var(--text-main); }
+        .user-tag { font-size: 0.8rem; margin-right: 10px; color: #888; font-weight: bold; }
 
-        .container { max-width: 500px; margin: 20px auto; padding: 20px; }
+        /* CONTAINER */
+        .container { max-width: 400px; margin: 40px auto; padding: 20px; }
         .card { background: white; padding: 30px; border-radius: var(--radius); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); text-align: center; }
         
-        button { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; font-size: 1rem; transition: transform 0.1s; }
-        button:active { transform: scale(0.98); }
+        /* INPUTS & BUTTONS */
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1rem; box-sizing: border-box; text-align: center; }
+        button { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; font-size: 1rem; margin-top: 10px; }
+        
+        /* UTILS */
         .hidden { display: none; }
+        .error { color: red; font-size: 0.9rem; margin-top: 10px; display: none; }
+        .link { color: var(--primary); cursor: pointer; text-decoration: underline; font-size: 0.9rem; }
 
-        .option-btn { 
-            background: #ffffff; 
-            color: #1f2937 !important; 
-            border: 2px solid #e5e7eb; 
-            display: block; width: 100%; text-align: left; padding: 15px; margin-bottom: 12px; border-radius: 10px; cursor: pointer; font-size: 1rem; 
-        }
-        .option-btn:hover { border-color: #93c5fd; background: #f9fafb; }
+        /* QUIZ STYLES */
+        .option-btn { background: #ffffff; color: #1f2937 !important; border: 2px solid #e5e7eb; display: block; width: 100%; text-align: left; padding: 15px; margin-bottom: 12px; border-radius: 10px; cursor: pointer; font-size: 1rem; }
         .option-btn.selected { background: var(--primary); color: white !important; border-color: var(--primary); }
-
         .review-item { text-align: left; background: #fef2f2; padding: 15px; margin-bottom: 10px; border-radius: 8px; border-left: 4px solid #ef4444; }
-        .review-q { font-weight: 700; margin-bottom: 5px; display: block; }
     </style>
 </head>
 <body>
 
     <nav>
         <span class="nav-title">🩺 QuizApp</span>
-        <button id="home-btn" class="nav-btn hidden" onclick="goHome()">🏠 Home</button>
+        <div id="nav-controls" class="hidden">
+            <span id="display-user" class="user-tag"></span>
+            <button class="nav-btn" onclick="signOut()">Log Out</button>
+        </div>
     </nav>
 
-    <div class="container">
-        <div id="loading-screen" class="card">
-            <h2>Connecting...</h2>
-            <p>Fetching database from Supabase.</p>
+    <div class="container" id="app-container">
+        
+        <div id="auth-screen" class="card">
+            <h2 id="auth-title">Welcome</h2>
+            <p id="auth-desc" style="color:#666; margin-bottom:20px;">Enter a username to begin.</p>
+            
+            <input type="text" id="username" placeholder="Username (e.g. nurse1)">
+            <input type="password" id="password" placeholder="Password">
+            
+            <button onclick="handleAuth()" id="auth-btn">Log In</button>
+            <p id="auth-error" class="error"></p>
+            
+            <p style="margin-top:20px; font-size:0.9rem;">
+                <span id="toggle-text">Need access?</span> 
+                <span class="link" onclick="toggleAuthMode()" id="toggle-link">Create Account</span>
+            </p>
+        </div>
+
+        <div id="loading-screen" class="card hidden">
+            <h2>Loading...</h2>
         </div>
 
         <div id="start-screen" class="card hidden">
             <h1 style="margin-top:0;">Pick a Topic</h1>
-            <p style="color:#666; margin-bottom:20px;">Choose a subject to generate a 10-question practice set.</p>
-            <select id="subject-select" style="width:100%; padding:12px; margin-bottom:20px; font-size:1rem; border-radius:8px; border:2px solid #e5e7eb;">
-                </select>
+            <select id="subject-select" style="width:100%; padding:12px; margin-bottom:20px; font-size:1rem; border-radius:8px; border:2px solid #e5e7eb;"></select>
             <button onclick="startQuiz()">Start Quiz</button>
         </div>
 
         <div id="quiz-screen" class="card hidden">
             <div style="display:flex; justify-content:space-between; color:#666; font-size:0.9rem; margin-bottom:15px;">
-                <span id="topic-badge">Anatomy</span>
+                <span id="topic-badge">Subject</span>
                 <span id="q-progress">1/10</span>
             </div>
             <h2 id="q-header" style="font-size:1.3rem; margin-bottom:25px; line-height:1.4;"></h2>
@@ -69,18 +87,17 @@
         <div id="result-screen" class="card hidden">
             <h2>Session Complete</h2>
             <div style="font-size:3rem; font-weight:800; color:var(--primary); margin:10px 0;" id="score-display">0%</div>
-            <p id="score-msg">Good job!</p>
             <div id="review-container" style="margin-top:30px;"></div>
-            <button onclick="goHome()" style="margin-top:20px;">Start New Quiz</button>
+            <button onclick="goHome()" style="margin-top:20px;">Back to Menu</button>
         </div>
+
     </div>
 
     <script>
-        // --- CONFIGURE SUPABASE HERE ---
+        // --- SUPABASE CONFIG ---
         const SUPABASE_URL = "https://ilsmjyvpduvmkxoxcqin.supabase.co"; 
         const SUPABASE_KEY = "sb_publishable_7ZI3V6f0ckuxpASg3febTw_E_oxey_I";
         
-        // Initialize Client
         const { createClient } = supabase;
         const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -88,35 +105,108 @@
         let currentQuestions = [];
         let currentIndex = 0;
         let score = 0;
+        let isSignUpMode = false;
 
-        // 1. FETCH DATA ON LOAD
-        window.onload = async function() {
-            try {
-                // Fetch from 'questions' table
-                let { data, error } = await _supabase
-                    .from('questions')
-                    .select('*');
-
-                if (error) throw error;
-                
-                questionBank = data;
-                
-                if(questionBank.length === 0) {
-                    alert("Database connected, but the table is empty! Add a row in Supabase.");
-                } else {
-                    loadSubjects();
-                    document.getElementById('loading-screen').classList.add('hidden');
-                    document.getElementById('start-screen').classList.remove('hidden');
-                    document.getElementById('home-btn').classList.remove('hidden');
-                }
-
-            } catch (err) {
-                console.error("Error:", err);
-                document.querySelector('#loading-screen h2').innerText = "Connection Failed";
-                document.querySelector('#loading-screen p').innerText = "Check your Supabase URL/Key in index.html";
+        // 1. CHECK LOGIN STATUS (Local Storage)
+        window.onload = function() {
+            const savedUser = localStorage.getItem('quizUser');
+            if (savedUser) {
+                showApp(savedUser);
+            } else {
+                document.getElementById('auth-screen').classList.remove('hidden');
             }
         };
 
+        // --- CUSTOM AUTH LOGIC ---
+        async function handleAuth() {
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+            const errorMsg = document.getElementById('auth-error');
+            
+            if(!user || !pass) {
+                showError("Please fill in both fields.");
+                return;
+            }
+
+            errorMsg.style.display = "none";
+            document.getElementById('auth-btn').innerText = "Checking...";
+
+            try {
+                if (isSignUpMode) {
+                    // 1. Check if user exists
+                    const { data: existing } = await _supabase.from('users').select('*').eq('username', user);
+                    if (existing.length > 0) {
+                        showError("Username already taken.");
+                        return;
+                    }
+                    // 2. Create User
+                    const { error } = await _supabase.from('users').insert({ username: user, password: pass });
+                    if (error) throw error;
+                    
+                    loginSuccess(user);
+
+                } else {
+                    // LOGIN: Check match
+                    const { data } = await _supabase.from('users').select('*').eq('username', user).eq('password', pass);
+                    
+                    if (data && data.length > 0) {
+                        loginSuccess(user);
+                    } else {
+                        showError("Invalid username or password.");
+                    }
+                }
+            } catch (e) {
+                showError("Connection error.");
+                console.error(e);
+            } finally {
+                document.getElementById('auth-btn').innerText = isSignUpMode ? "Create Account" : "Log In";
+            }
+        }
+
+        function loginSuccess(username) {
+            localStorage.setItem('quizUser', username); // Save to browser memory
+            showApp(username);
+        }
+
+        function signOut() {
+            localStorage.removeItem('quizUser');
+            location.reload();
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('auth-error');
+            el.innerText = msg;
+            el.style.display = "block";
+            document.getElementById('auth-btn').innerText = isSignUpMode ? "Create Account" : "Log In";
+        }
+
+        function toggleAuthMode() {
+            isSignUpMode = !isSignUpMode;
+            document.getElementById('auth-title').innerText = isSignUpMode ? "Create Account" : "Welcome";
+            document.getElementById('auth-desc').innerText = isSignUpMode ? "Choose a username and password." : "Enter a username to begin.";
+            document.getElementById('auth-btn').innerText = isSignUpMode ? "Create Account" : "Log In";
+            document.getElementById('toggle-text').innerText = isSignUpMode ? "Already have a login?" : "Need access?";
+            document.getElementById('toggle-link').innerText = isSignUpMode ? "Log In" : "Create Account";
+            document.getElementById('auth-error').style.display = 'none';
+        }
+
+        async function showApp(username) {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('loading-screen').classList.remove('hidden');
+            document.getElementById('nav-controls').classList.remove('hidden');
+            document.getElementById('display-user').innerText = username;
+
+            // Fetch Data
+            let { data, error } = await _supabase.from('questions').select('*');
+            if(data) {
+                questionBank = data;
+                loadSubjects();
+                document.getElementById('loading-screen').classList.add('hidden');
+                document.getElementById('start-screen').classList.remove('hidden');
+            }
+        }
+
+        // --- QUIZ LOGIC (Standard) ---
         function loadSubjects() {
             const subjects = [...new Set(questionBank.map(q => q.subject))];
             const select = document.getElementById('subject-select');
@@ -129,7 +219,6 @@
             });
         }
 
-        // --- NAVIGATION LOGIC ---
         function goHome() {
             document.getElementById('quiz-screen').classList.add('hidden');
             document.getElementById('result-screen').classList.add('hidden');
@@ -139,12 +228,9 @@
         function startQuiz() {
             const subject = document.getElementById('subject-select').value;
             let filtered = subject === "All" ? questionBank : questionBank.filter(q => q.subject === subject);
-            
             if(filtered.length === 0) { alert("No questions found!"); return; }
-            
             currentQuestions = filtered.sort(() => 0.5 - Math.random()).slice(0, 10);
             currentIndex = 0; score = 0;
-            
             document.getElementById('topic-badge').innerText = subject;
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.remove('hidden');
@@ -155,12 +241,10 @@
             const q = currentQuestions[currentIndex];
             document.getElementById('q-progress').innerText = `${currentIndex + 1}/${currentQuestions.length}`;
             document.getElementById('q-header').innerText = q.question;
-            
             const container = document.getElementById('options-container');
             container.innerHTML = '';
             document.getElementById('next-btn').classList.add('hidden');
 
-            // Handle options (parse if it's a string, use directly if object)
             let opts = q.options;
             if (typeof opts === 'string') opts = JSON.parse(opts);
 
@@ -188,28 +272,15 @@
         function showResults() {
             document.getElementById('quiz-screen').classList.add('hidden');
             document.getElementById('result-screen').classList.remove('hidden');
-            
-            const percent = Math.round((score/currentQuestions.length)*100);
-            document.getElementById('score-display').innerText = percent + "%";
-            document.getElementById('score-msg').innerText = percent > 70 ? "Great job! 🎉" : "Keep practicing! 💪";
-
+            document.getElementById('score-display').innerText = Math.round((score/currentQuestions.length)*100) + "%";
             const container = document.getElementById('review-container');
             container.innerHTML = '';
-            
             const wrong = currentQuestions.filter(q => q.userSelected !== q.answer);
             if(wrong.length === 0) {
-                container.innerHTML = "<p style='color:green;'>Perfect score! No mistakes to review.</p>";
+                container.innerHTML = "<p style='color:green;'>Perfect score!</p>";
             } else {
                 wrong.forEach(q => {
-                    container.innerHTML += `
-                    <div class="review-item">
-                        <span class="review-q">${q.question}</span>
-                        <div style="font-size:0.9rem;">
-                            <span style="color:#ef4444; text-decoration:line-through;">${q.userSelected}</span> 
-                            <span style="color:#059669; font-weight:bold; margin-left:10px;">➜ ${q.answer}</span>
-                        </div>
-                        <p style="font-size:0.85rem; color:#666; margin-top:5px; font-style:italic;">💡 ${q.rationale}</p>
-                    </div>`;
+                    container.innerHTML += `<div class="review-item"><p><strong>${q.question}</strong><br><span style="color:red; text-decoration:line-through">${q.userSelected}</span> ➜ <span style="color:green">${q.answer}</span></p><p style="font-size:0.8rem; color:#666">💡 ${q.rationale}</p></div>`;
                 });
             }
         }
