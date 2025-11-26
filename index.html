@@ -17,21 +17,21 @@
         .review-item { border-bottom: 1px solid #eee; padding: 10px 0; }
         .correct-text { color: var(--success); font-weight: bold; }
         .wrong-text { color: var(--error); font-weight: bold; }
+        #loading-msg { color: #666; font-style: italic; }
     </style>
 </head>
 <body>
 
-    
     <div id="start-screen" class="card">
         <h1>Nursing Quiz (OER)</h1>
-        <p>Select a subject to begin:</p>
-        <select id="subject-select" style="padding: 10px; width: 100%; margin-bottom: 15px;">
-            <option value="All">All Subjects</option>
-            <option value="Anatomy">Anatomy & Physiology</option>
-            <option value="Microbiology">Microbiology</option>
-            <option value="Nutrition">Nutrition</option>
-        </select>
-        <button onclick="startQuiz()">Start Quiz</button>
+        <p id="loading-msg">Loading question bank...</p>
+        <div id="selection-area" class="hidden">
+            <p>Select a subject to begin:</p>
+            <select id="subject-select" style="padding: 10px; width: 100%; margin-bottom: 15px;">
+                <option value="All">All Subjects</option>
+                </select>
+            <button onclick="startQuiz()">Start Quiz</button>
+        </div>
     </div>
 
     <div id="quiz-screen" class="card hidden">
@@ -49,46 +49,53 @@
     </div>
 
     <script>
-        // --- DATA SECTION: PASTE YOUR JSON DATA HERE LATER ---
-        const questionBank = [
-            { id: 1, subject: "Anatomy", question: "In the anatomical position, the palms face:", options: ["Posterior", "Anterior", "Medial", "Lateral"], answer: "Anterior", rationale: "Standard anatomical position requires palms facing forward." },
-            { id: 2, subject: "Anatomy", question: "Which organelle produces ATP?", options: ["Ribosome", "Nucleus", "Mitochondria", "Golgi"], answer: "Mitochondria", rationale: "Mitochondria are the powerhouse of the cell." },
-            { id: 3, subject: "Physiology", question: "Normal blood pH is:", options: ["7.0-7.1", "7.25-7.35", "7.35-7.45", "7.55-7.65"], answer: "7.35-7.45", rationale: "Human blood is slightly alkaline." },
-            { id: 4, subject: "Nutrition", question: "Which macronutrient has 9 kcal/g?", options: ["Carbs", "Protein", "Fats", "Water"], answer: "Fats", rationale: "Fats are the most energy-dense nutrient." },
-            { id: 5, subject: "Microbiology", question: "Gram-positive bacteria stain what color?", options: ["Pink", "Purple", "Green", "Red"], answer: "Purple", rationale: "Thick peptidoglycan retains the crystal violet stain." },
-            { id: 6, subject: "Anatomy", question: "Which bone is the longest in the body?", options: ["Femur", "Humerus", "Tibia", "Fibula"], answer: "Femur", rationale: "The thigh bone (femur) is the longest and strongest." },
-            { id: 7, subject: "Microbiology", question: "What is a nosocomial infection?", options: ["Animal acquired", "Hospital acquired", "Community acquired", "Unknown origin"], answer: "Hospital acquired", rationale: "Nosocomial means originating in a hospital." },
-            { id: 8, subject: "Nutrition", question: "Vitamin C is:", options: ["Fat soluble", "Water soluble", "Stored in liver", "Toxic in small doses"], answer: "Water soluble", rationale: "Excess Vitamin C is excreted in urine." },
-            { id: 9, subject: "Physiology", question: "Water moving to high solute concentration is:", options: ["Diffusion", "Osmosis", "Active Transport", "Filtration"], answer: "Osmosis", rationale: "Osmosis is the movement of water across a membrane." },
-            { id: 10, subject: "Anatomy", question: "The mitral valve is on which side of the heart?", options: ["Left", "Right", "Both", "None"], answer: "Left", rationale: "It is between the left atrium and ventricle." },
-            { id: 11, subject: "Nutrition", question: "Iron deficiency causes:", options: ["Scurvy", "Anemia", "Rickets", "Beriberi"], answer: "Anemia", rationale: "Iron is essential for hemoglobin production." }
-        ];
-
-        // --- APP LOGIC ---
+        let questionBank = [];
         let currentQuestions = [];
         let currentIndex = 0;
         let score = 0;
-        let userAnswers = [];
+
+        // 1. FETCH DATA ON LOAD
+        window.onload = async function() {
+            try {
+                const response = await fetch('questions.json');
+                if (!response.ok) throw new Error("Could not find questions.json");
+                
+                questionBank = await response.json();
+                
+                // Populate Dropdown
+                const subjects = [...new Set(questionBank.map(q => q.subject))];
+                const select = document.getElementById('subject-select');
+                subjects.forEach(sub => {
+                    const opt = document.createElement('option');
+                    opt.value = sub;
+                    opt.innerText = sub;
+                    select.appendChild(opt);
+                });
+
+                document.getElementById('loading-msg').classList.add('hidden');
+                document.getElementById('selection-area').classList.remove('hidden');
+
+            } catch (error) {
+                document.getElementById('loading-msg').innerText = "Error loading questions. Make sure questions.json exists!";
+                console.error(error);
+            }
+        };
 
         function startQuiz() {
             const subject = document.getElementById('subject-select').value;
             
-            // 1. Filter Questions
             let filtered = subject === "All" 
                 ? questionBank 
                 : questionBank.filter(q => q.subject === subject);
 
             if(filtered.length === 0) { alert("No questions found for this subject!"); return; }
 
-            // 2. Shuffle and pick 10
+            // Shuffle and pick 10
             currentQuestions = filtered.sort(() => 0.5 - Math.random()).slice(0, 10);
             
-            // 3. Reset variables
             currentIndex = 0;
             score = 0;
-            userAnswers = [];
             
-            // 4. Switch Screens
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.remove('hidden');
             loadQuestion();
@@ -100,7 +107,7 @@
             document.getElementById('question-text').innerText = q.question;
             
             const container = document.getElementById('options-container');
-            container.innerHTML = ''; // Clear previous options
+            container.innerHTML = ''; 
             document.getElementById('next-btn').classList.add('hidden');
 
             q.options.forEach(opt => {
@@ -113,20 +120,14 @@
         }
 
         function selectOption(btn, selectedText) {
-            // Remove 'selected' from all buttons
             document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
-            // Add to clicked button
             btn.classList.add('selected');
-            
-            // Save answer temporarily
             currentQuestions[currentIndex].userSelected = selectedText;
             document.getElementById('next-btn').classList.remove('hidden');
         }
 
         function nextQuestion() {
             const q = currentQuestions[currentIndex];
-            
-            // Check correctness
             if (q.userSelected === q.answer) {
                 score++;
                 q.isCorrect = true;
@@ -145,7 +146,6 @@
         function showResults() {
             document.getElementById('quiz-screen').classList.add('hidden');
             document.getElementById('result-screen').classList.remove('hidden');
-            
             document.getElementById('score-display').innerText = `${score} / ${currentQuestions.length}`;
             
             const container = document.getElementById('review-container');
