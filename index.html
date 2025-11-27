@@ -20,21 +20,15 @@
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .card { background: white; padding: 30px; border-radius: var(--radius); box-shadow: 0 4px 20px -5px rgba(0,0,0,0.1); text-align: center; margin-bottom: 20px; position: relative; }
         
-        /* AUTH & INPUTS */
+        /* INPUTS & BUTTONS */
         input { width: 100%; padding: 14px; margin: 10px 0; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 1rem; box-sizing: border-box; text-align: center; transition: border 0.2s; }
         input:focus { border-color: var(--primary); outline: none; }
         button { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 600; cursor: pointer; width: 100%; font-size: 1rem; transition: transform 0.1s; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); }
         button:active { transform: scale(0.98); }
-        button.secondary { background: white; color: var(--text); border: 2px solid #e5e7eb; box-shadow: none; }
         button.text-btn { background: none; color: #6b7280; border: none; box-shadow: none; width: auto; padding: 5px 10px; font-size: 0.85rem; }
         button.text-btn:hover { color: var(--primary); background: #f3f4f6; }
         
-        /* DASHBOARD TABS */
-        .mode-switch { display: flex; background: #e5e7eb; padding: 5px; border-radius: 14px; margin-bottom: 25px; }
-        .mode-btn { flex: 1; background: transparent; color: #6b7280; box-shadow: none; padding: 12px; border-radius: 10px; }
-        .mode-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-
-        /* SUBJECT TILES GRID */
+        /* TILES & GRIDS */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
         .tile { background: white; border: 2px solid #e5e7eb; border-radius: 16px; padding: 20px 10px; cursor: pointer; transition: all 0.2s; text-align: center; }
         .tile:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
@@ -42,10 +36,8 @@
         .tile-name { font-weight: 700; font-size: 0.9rem; color: var(--text); }
         
         /* QUIZ UI */
-        .option-btn { background: white; color: var(--text); border: 2px solid #e5e7eb; width: 100%; text-align: left; padding: 16px; margin-bottom: 12px; border-radius: 12px; cursor: pointer; font-size: 1rem; position: relative; }
+        .option-btn { background: white; color: var(--text); border: 2px solid #e5e7eb; width: 100%; text-align: left; padding: 16px; margin-bottom: 12px; border-radius: 12px; cursor: pointer; font-size: 1rem; }
         .option-btn:hover { border-color: var(--accent); background: #f8fafc; }
-        
-        /* STATES */
         .option-btn.selected { background: var(--primary); color: white; border-color: var(--primary); }
         .option-btn.correct { background: #d1fae5; border-color: #059669; color: #064e3b; }
         .option-btn.wrong { opacity: 0.5; }
@@ -53,9 +45,10 @@
         .hidden { display: none; }
         .rationale-box { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 15px; border-radius: 10px; margin-top: 15px; text-align: left; font-size: 0.95rem; line-height: 1.5; }
         
-        /* UTILS */
-        .error { color: #ef4444; margin-top: 10px; display: none; font-size: 0.9rem; }
-        .link { color: var(--primary); cursor: pointer; text-decoration: underline; }
+        /* MODE SWITCH */
+        .mode-switch { display: flex; background: #e5e7eb; padding: 5px; border-radius: 14px; margin-bottom: 25px; }
+        .mode-btn { flex: 1; background: transparent; color: #6b7280; box-shadow: none; padding: 12px; border-radius: 10px; }
+        .mode-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
@@ -71,21 +64,17 @@
     <div class="container">
 
         <div id="auth-screen" class="card">
-            <h1 id="auth-title">Welcome</h1>
-            <p id="auth-desc" style="color:#6b7280; margin-bottom:20px;">Sign in to access your study hub.</p>
+            <h1>Welcome</h1>
+            <p style="color:#6b7280; margin-bottom:20px;">Sign in to start learning.</p>
             <input type="text" id="username" placeholder="Username">
             <input type="password" id="password" placeholder="Password">
             <button onclick="handleAuth()" id="auth-btn">Log In</button>
-            <p id="auth-error" class="error"></p>
-            <p style="margin-top:20px; font-size:0.9rem;">
-                <span id="toggle-text">First time?</span> 
-                <span class="link" onclick="toggleAuthMode()" id="toggle-link">Create Account</span>
-            </p>
+            <p id="auth-error" style="color:red; display:none; margin-top:10px;"></p>
+            <p style="margin-top:20px; font-size:0.9rem; color:var(--primary); cursor:pointer;" onclick="toggleAuthMode()" id="toggle-link">Create Account</p>
         </div>
 
         <div id="loading-screen" class="card hidden">
             <h2>Connecting...</h2>
-            <div style="color:#6b7280;">Fetching your database</div>
         </div>
 
         <div id="dashboard-screen" class="hidden">
@@ -93,36 +82,37 @@
                 <button class="mode-btn active" onclick="setMode('study')" id="tab-study">📚 STUDY</button>
                 <button class="mode-btn" onclick="setMode('test')" id="tab-test">📝 TEST</button>
             </div>
-
+            
             <div style="margin-bottom:20px; text-align:center;">
-                <h2 id="dash-title" style="margin:0;">Study Mode</h2>
-                <p id="dash-desc" style="color:#6b7280; margin-top:5px;">Review cards and learn rationales.</p>
+                <h2 id="dash-title" style="margin:0;">Select a Course</h2>
             </div>
 
-            <div id="subjects-grid" class="grid">
-                </div>
+            <div id="categories-grid" class="grid"></div>
+        </div>
+
+        <div id="submenu-screen" class="hidden">
+            <div style="display:flex; align-items:center; margin-bottom:20px;">
+                <button class="text-btn" onclick="goHome()">← Back</button>
+                <h2 style="margin:0 auto; font-size:1.2rem;" id="submenu-title">Topics</h2>
+                <div style="width:50px;"></div> </div>
+            <div id="topics-grid" class="grid"></div>
         </div>
 
         <div id="session-screen" class="card hidden">
             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; border-bottom:1px solid #f3f4f6; padding-bottom:15px;">
-                <button class="text-btn" onclick="goHome()">← Quit</button>
+                <button class="text-btn" onclick="goSubmenu()">← Quit</button>
                 <span id="session-progress" style="color:#9ca3af; font-weight:600; font-size:0.9rem;">1/10</span>
             </div>
-            
             <h2 id="q-text" style="font-size:1.25rem; line-height:1.4; margin-bottom:25px;"></h2>
-            
             <div id="options-area"></div>
-            
             <div id="rationale-area" class="rationale-box hidden"></div>
-
             <button id="action-btn" class="hidden" style="margin-top:20px;">Next</button>
         </div>
 
         <div id="result-screen" class="card hidden">
-            <h2>Test Complete</h2>
+            <h2>Complete!</h2>
             <div style="font-size:3.5rem; font-weight:800; color:var(--primary); margin:10px 0;" id="score-val"></div>
-            <p id="score-msg" style="color:#6b7280;"></p>
-            <button onclick="goHome()" style="margin-top:20px;">Back to Dashboard</button>
+            <button onclick="goSubmenu()" style="margin-top:20px;">Back to Topics</button>
         </div>
 
     </div>
@@ -135,24 +125,19 @@
         const { createClient } = supabase;
         const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // --- STATE ---
         let appState = {
-            questions: [],
+            data: [],
+            currentCategory: null,
             currentSet: [],
-            index: 0,
-            score: 0,
-            mode: 'study', // 'study' or 'test'
-            isSignUp: false
+            index: 0, score: 0,
+            mode: 'study', isSignUp: false
         };
 
-        // --- ICONS MAPPING ---
         const ICONS = {
-            "Anatomy": "🦴", "Physiology": "❤️", "Pharmacology": "💊", 
-            "Pediatrics": "👶", "Nutrition": "🍎", "Microbiology": "🦠",
-            "default": "📚"
+            "Pharmacology": "💊", "Anatomy": "🦴", "Pediatrics": "👶", 
+            "Physiology": "❤️", "Nutrition": "🍎", "General": "📚"
         };
 
-        // --- INIT ---
         window.onload = function() {
             const user = localStorage.getItem('quizUser');
             if(user) showApp(user);
@@ -162,58 +147,40 @@
         async function handleAuth() {
             const u = document.getElementById('username').value.trim();
             const p = document.getElementById('password').value.trim();
-            const err = document.getElementById('auth-error');
             
-            if(!u || !p) return showErr("Fields cannot be empty.");
+            if(!u || !p) return alert("Fill all fields");
             document.getElementById('auth-btn').innerText = "Working...";
 
-            try {
-                if(appState.isSignUp) {
-                    const { data } = await _supabase.from('users').select('*').eq('username', u);
-                    if(data.length) return showErr("Username taken.");
-                    await _supabase.from('users').insert({ username: u, password: p });
-                    completeLogin(u);
-                } else {
-                    const { data } = await _supabase.from('users').select('*').eq('username', u).eq('password', p);
-                    if(data.length) completeLogin(u);
-                    else showErr("Invalid credentials.");
-                }
-            } catch(e) { showErr("Connection failed."); }
-            document.getElementById('auth-btn').innerText = appState.isSignUp ? "Sign Up" : "Log In";
-        }
-
-        function completeLogin(u) {
+            if(appState.isSignUp) {
+                const { data } = await _supabase.from('users').select('*').eq('username', u);
+                if(data.length) return alert("Username taken");
+                await _supabase.from('users').insert({ username: u, password: p });
+            } else {
+                const { data } = await _supabase.from('users').select('*').eq('username', u).eq('password', p);
+                if(!data.length) return alert("Invalid login");
+            }
+            
             localStorage.setItem('quizUser', u);
             showApp(u);
-        }
-
-        function showErr(msg) {
-            const e = document.getElementById('auth-error');
-            e.innerText = msg; e.style.display = 'block';
         }
 
         function toggleAuthMode() {
             appState.isSignUp = !appState.isSignUp;
             document.getElementById('auth-title').innerText = appState.isSignUp ? "Create Account" : "Welcome";
             document.getElementById('auth-btn').innerText = appState.isSignUp ? "Sign Up" : "Log In";
-            document.getElementById('toggle-text').innerText = appState.isSignUp ? "Has account?" : "First time?";
             document.getElementById('toggle-link').innerText = appState.isSignUp ? "Log In" : "Create Account";
-            document.getElementById('auth-error').style.display = 'none';
         }
 
-        function signOut() {
-            localStorage.removeItem('quizUser');
-            location.reload();
-        }
+        function signOut() { localStorage.removeItem('quizUser'); location.reload(); }
 
-        // --- DATA LOADING ---
+        // --- LOAD DATA ---
         async function showApp(user) {
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('loading-screen').classList.remove('hidden');
             
             const { data } = await _supabase.from('questions').select('*');
             if(data) {
-                appState.questions = data;
+                appState.data = data;
                 document.getElementById('display-user').innerText = user;
                 document.getElementById('nav-user').classList.remove('hidden');
                 document.getElementById('loading-screen').classList.add('hidden');
@@ -221,61 +188,81 @@
             }
         }
 
-        // --- DASHBOARD LOGIC ---
+        // --- NAVIGATION ---
         function goHome() {
-            document.getElementById('session-screen').classList.add('hidden');
-            document.getElementById('result-screen').classList.add('hidden');
+            hideAll();
             document.getElementById('dashboard-screen').classList.remove('hidden');
-            renderTiles();
-        }
-
-        function setMode(mode) {
-            appState.mode = mode;
-            // Toggle Tab UI
-            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(`tab-${mode}`).classList.add('active');
             
-            // Update Text
-            if(mode === 'study') {
-                document.getElementById('dash-title').innerText = "Study Mode";
-                document.getElementById('dash-desc').innerText = "Flip cards, check rationales, no pressure.";
-            } else {
-                document.getElementById('dash-title').innerText = "Test Mode";
-                document.getElementById('dash-desc').innerText = "Take a scored quiz to test your knowledge.";
-            }
-        }
-
-        function renderTiles() {
-            const subjects = [...new Set(appState.questions.map(q => q.subject))];
-            const grid = document.getElementById('subjects-grid');
+            // Get unique Categories (Pharmacology, Anatomy, etc.)
+            const categories = [...new Set(appState.data.map(q => q.category || 'General'))];
+            const grid = document.getElementById('categories-grid');
             grid.innerHTML = "";
-            
-            subjects.forEach(sub => {
-                const icon = ICONS[sub] || ICONS["default"];
-                const count = appState.questions.filter(q => q.subject === sub).length;
-                
+
+            categories.forEach(cat => {
+                const icon = ICONS[cat] || "📂";
+                const count = appState.data.filter(q => (q.category || 'General') === cat).length;
                 grid.innerHTML += `
-                <div class="tile" onclick="startSession('${sub}')">
+                <div class="tile" onclick="openCategory('${cat}')">
                     <span class="tile-icon">${icon}</span>
-                    <div class="tile-name">${sub}</div>
+                    <div class="tile-name">${cat}</div>
                     <div style="font-size:0.75rem; color:#9ca3af; margin-top:5px;">${count} Qs</div>
                 </div>`;
             });
         }
 
-        // --- SESSION LOGIC (Study & Test) ---
-        function startSession(subject) {
-            const pool = appState.questions.filter(q => q.subject === subject);
-            if(!pool.length) return alert("Empty topic.");
+        function openCategory(cat) {
+            appState.currentCategory = cat;
+            hideAll();
+            document.getElementById('submenu-screen').classList.remove('hidden');
+            document.getElementById('submenu-title').innerText = cat;
+
+            // Get unique Subjects inside this Category
+            const filtered = appState.data.filter(q => (q.category || 'General') === cat);
+            const subjects = [...new Set(filtered.map(q => q.subject))];
             
-            // Shuffle
-            appState.currentSet = pool.sort(() => 0.5 - Math.random()).slice(0, 10);
-            appState.index = 0;
-            appState.score = 0;
-            
+            const grid = document.getElementById('topics-grid');
+            grid.innerHTML = "";
+
+            subjects.forEach(sub => {
+                const count = filtered.filter(q => q.subject === sub).length;
+                // Strip "Week X:" for cleaner display if desired
+                const displayName = sub.replace(/Week \d+: /, ""); 
+                
+                grid.innerHTML += `
+                <div class="tile" onclick="startSession('${sub}')">
+                    <span class="tile-icon">📑</span>
+                    <div class="tile-name">${displayName}</div>
+                    <div style="font-size:0.75rem; color:#9ca3af; margin-top:5px;">${count} Qs</div>
+                </div>`;
+            });
+        }
+
+        function goSubmenu() {
+            if(appState.currentCategory) openCategory(appState.currentCategory);
+            else goHome();
+        }
+
+        function hideAll() {
             document.getElementById('dashboard-screen').classList.add('hidden');
-            document.getElementById('session-screen').classList.remove('hidden');
+            document.getElementById('submenu-screen').classList.add('hidden');
+            document.getElementById('session-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+        }
+
+        function setMode(m) {
+            appState.mode = m;
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab-${m}`).classList.add('active');
+        }
+
+        // --- QUIZ LOGIC ---
+        function startSession(subject) {
+            const pool = appState.data.filter(q => q.subject === subject);
+            appState.currentSet = pool.sort(() => 0.5 - Math.random()).slice(0, 10);
+            appState.index = 0; appState.score = 0;
             
+            hideAll();
+            document.getElementById('session-screen').classList.remove('hidden');
             loadCard();
         }
 
@@ -287,84 +274,54 @@
             document.getElementById('q-text').innerText = q.question;
             document.getElementById('rationale-area').classList.add('hidden');
             
-            // Setup Button
             const btn = document.getElementById('action-btn');
             btn.classList.add('hidden');
             btn.innerText = isStudy ? "Next Card" : "Next Question";
             btn.onclick = nextCard;
 
-            // Options
-            const container = document.getElementById('options-area');
-            container.innerHTML = "";
-            
-            // Parse options
+            const box = document.getElementById('options-area');
+            box.innerHTML = "";
             let opts = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
             
             opts.forEach(opt => {
                 const b = document.createElement('button');
                 b.className = 'option-btn';
                 b.innerText = opt;
-                
                 b.onclick = () => {
-                    if(btn.style.display !== 'none' && !isStudy) return; 
-                    
+                    if(btn.style.display !== 'none' && !isStudy) return;
                     document.querySelectorAll('.option-btn').forEach(x => x.classList.remove('selected'));
                     b.classList.add('selected');
                     q.userSelected = opt;
-                    
-                    if(isStudy) {
-                        revealAnswer(q);
-                    } else {
-                        btn.classList.remove('hidden');
-                    }
+                    if(isStudy) reveal(q); else btn.classList.remove('hidden');
                 };
-                container.appendChild(b);
+                box.appendChild(b);
             });
         }
 
-        function revealAnswer(q) {
-            // Disable clicks
+        function reveal(q) {
             document.querySelectorAll('.option-btn').forEach(b => {
                 b.onclick = null;
                 if(b.innerText === q.answer) b.classList.add('correct');
                 else if(b.classList.contains('selected')) b.classList.add('wrong');
             });
-            
-            // Show Rationale
-            const rBox = document.getElementById('rationale-area');
-            rBox.innerHTML = `<strong>💡 Rationale:</strong> ${q.rationale}`;
-            rBox.classList.remove('hidden');
-            
+            document.getElementById('rationale-area').innerHTML = `<strong>💡 Rationale:</strong> ${q.rationale}`;
+            document.getElementById('rationale-area').classList.remove('hidden');
             document.getElementById('action-btn').classList.remove('hidden');
         }
 
         function nextCard() {
             const q = appState.currentSet[appState.index];
-            
-            if(appState.mode === 'test') {
-                if(q.userSelected === q.answer) appState.score++;
-            }
+            if(appState.mode === 'test' && q.userSelected === q.answer) appState.score++;
             
             appState.index++;
-            if(appState.index < appState.currentSet.length) {
-                loadCard();
-            } else {
-                finishSession();
-            }
+            if(appState.index < appState.currentSet.length) loadCard();
+            else showResults();
         }
 
-        function finishSession() {
-            document.getElementById('session-screen').classList.add('hidden');
-            
-            if(appState.mode === 'test') {
-                document.getElementById('result-screen').classList.remove('hidden');
-                const pct = Math.round((appState.score / appState.currentSet.length) * 100);
-                document.getElementById('score-val').innerText = pct + "%";
-                document.getElementById('score-msg').innerText = pct > 75 ? "Excellent work!" : "Review and try again.";
-            } else {
-                // Study mode just goes back to dashboard
-                goHome();
-            }
+        function showResults() {
+            hideAll();
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('score-val').innerText = Math.round((appState.score / appState.currentSet.length) * 100) + "%";
         }
     </script>
 </body>
