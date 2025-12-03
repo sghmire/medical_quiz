@@ -45,7 +45,6 @@
         .admin-input { width: 100%; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 0.75rem; font-size: 0.875rem; transition: all 0.2s; }
         .admin-input:focus { outline: none; border-color: #3b82f6; ring: 2px; }
         
-        /* Shape classes for Multi/Single */
         .icon-radio { border-radius: 50%; } 
         .icon-check { border-radius: 6px; } 
     </style>
@@ -306,6 +305,22 @@
             const cats = [...new Set(appState.data.map(q => q.category || 'General'))].sort();
             const grid = document.getElementById('categories-grid');
             grid.innerHTML = "";
+
+            // --- NEW: RANDOM QUIZ BUTTON ---
+            grid.innerHTML += `
+            <div onclick="startRandomSession()" class="glass p-5 rounded-2xl cursor-pointer hover:bg-white transition-all group animate-slide-up col-span-2 border-2 border-dashed border-purple-300 bg-purple-50/50">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 text-white flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform group-hover:rotate-12">
+                        <i class="ph-bold ph-lightning"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg text-purple-900">Quick Mix</h3>
+                        <p class="text-xs text-purple-600 font-semibold">5 Random Questions</p>
+                    </div>
+                    <div class="ml-auto bg-white p-2 rounded-full text-purple-500 shadow-sm"><i class="ph-bold ph-caret-right"></i></div>
+                </div>
+            </div>`;
+
             cats.forEach((cat, idx) => {
                 const count = appState.data.filter(q => (q.category||'General') === cat).length;
                 const icon = ICONS[cat] || ICONS['Default'];
@@ -342,6 +357,23 @@
         function startSession(sub) {
             appState.currentSet = appState.data.filter(q => q.subject === sub).sort(()=>0.5-Math.random()).slice(0,15);
             appState.index = 0; appState.score = 0;
+            hideAll();
+            document.getElementById('session-screen').classList.remove('hidden');
+            loadCard();
+        }
+
+        function startRandomSession() {
+            if(appState.data.length === 0) return showToast("No questions available", "error");
+            
+            // 1. Shuffle ALL data
+            const shuffled = [...appState.data].sort(() => 0.5 - Math.random());
+            
+            // 2. Take first 5
+            appState.currentSet = shuffled.slice(0, 5);
+            
+            // 3. Start
+            appState.index = 0; 
+            appState.score = 0;
             hideAll();
             document.getElementById('session-screen').classList.remove('hidden');
             loadCard();
