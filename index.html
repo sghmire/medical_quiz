@@ -190,7 +190,8 @@
 
         let appState = { 
             data: [], user: null, isAdmin: false,
-            currentSet: [], index: 0, score: 0, mode: 'study', isSignUp: false 
+            currentSet: [], index: 0, score: 0, mode: 'study', isSignUp: false,
+            editingId: null 
         };
 
         // --- UTILS ---
@@ -406,38 +407,47 @@
                 document.getElementById('adm-opt-2').value,
                 document.getElementById('adm-opt-3').value,
                 document.getElementById('adm-opt-4').value
-            ].filter(o => o.trim() !== ""); // Filter empty
+            ].filter(o => o.trim() !== "");
             
             const ansIndex = document.getElementById('adm-ans').value;
             const rat = document.getElementById('adm-rat').value;
-
+        
             if(!cat || !sub || !q || opts.length < 2 || !ansIndex) return showToast("Fill all fields", "error");
-
-            const newQ = {
+        
+            const payload = {
                 category: cat,
                 subject: sub,
                 question: q,
-                options: opts, // Send as JSON array
-                answer: opts[parseInt(ansIndex)], // Get string value
+                options: opts,
+                answer: opts[parseInt(ansIndex)],
                 rationale: rat
             };
-
+        
             showLoading(true);
-            const { error } = await _supabase.from('questions').insert(newQ);
+        
+            let error;
+            
+            // --- CHECK: ARE WE EDITING OR CREATING? ---
+            if (appState.editingId) {
+                // UPDATE EXISTING
+                const res = await _supabase.from('questions').update(payload).eq('id', appState.editingId);
+                error = res.error;
+            } else {
+                // CREATE NEW
+                const res = await _supabase.from('questions').insert(payload);
+                error = res.error;
+            }
+        
             showLoading(false);
-
-            if(error) showToast("Failed to save", "error");
-            else {
-                showToast("Question Added!");
-                // Clear form
-                document.getElementById('adm-q').value = "";
-                document.getElementById('adm-opt-1').value = "";
-                document.getElementById('adm-opt-2').value = "";
-                document.getElementById('adm-opt-3').value = "";
-                document.getElementById('adm-opt-4').value = "";
-                document.getElementById('adm-rat').value = "";
-                loadData(); // Refresh local data
-                loadAdminList();
+        
+            if(error) {
+                showToast("Failed to save", "error");
+            } else {
+                showToast(appState.editingId ? "Updated successfully!" : "Question Added!");
+                resetAdminForm(); // Clear inputs
+                loadData(); // Fetch new data
+                // We don't call loadAdminList here because loadData will trigger a refresh eventually, 
+                // or we can wait for the user to navigate.
             }
         }
 
@@ -465,17 +475,23 @@
         function loadAdminList() {
             const list = document.getElementById('admin-list');
             list.innerHTML = "";
-            // Show last 10 added
             const recent = appState.data.slice(-10).reverse();
             
             recent.forEach(q => {
                 list.innerHTML += `
-                <div class="glass p-4 rounded-xl flex justify-between items-start">
-                    <div class="w-3/4">
+                <div class="glass p-4 rounded-xl flex justify-between items-start animate-slide-up">
+                    <div class="w-2/3">
                         <span class="text-[10px] uppercase font-bold text-brand-600 bg-brand-50 px-2 py-1 rounded">${q.category}</span>
                         <p class="text-sm font-bold mt-2 truncate">${q.question}</p>
                     </div>
-                    <button onclick="deleteQuestion('${q.id}')" class="text-red-400 hover:text-red-600 p-2"><i class="ph-bold ph-trash"></i></button>
+                    <div class="flex gap-2">
+                        <button onclick="editQuestion('${q.id}')" class="bg-blue-100 text-blue-600 p-2 rounded-lg hover:bg-blue-200 transition-colors">
+                            <i class="ph-bold ph-pencil-simple"></i>
+                        </button>
+                        <button onclick="deleteQuestion('${q.id}')" class="bg-red-100 text-red-500 p-2 rounded-lg hover:bg-red-200 transition-colors">
+                            <i class="ph-bold ph-trash"></i>
+                        </button>
+                    </div>
                 </div>`;
             });
         }
@@ -493,6 +509,57 @@
             }
             showLoading(false);
         }
+
+        function editQuestion(id) {
+                const q = appState.data.find(x => x.id == id);
+                if(!q) return;
+            
+                appState.editingId = id; // Turn on "Edit Mode"
+            
+                // 1. Populate the form fields
+                document.getElementById('adm-cat').value = q.category;
+                document.getElementById('adm-sub').value = q.subject;
+                document.getElementById('adm-q').value = q.question;
+                document.getElementById('adm-rat').value = q.rationale;
+            
+                // 2. Handle Options (JSON parsing safety)
+                let opts = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
+                document.getElementById('adm-opt-1').value = opts[0] || "";
+                document.getElementById('adm-opt-2').value = opts[1] || "";
+                document.getElementById('adm-opt-3').value = opts[2] || "";
+                document.getElementById('adm-opt-4').value = opts[3] || "";
+            
+                // 3. Set the Correct Answer Select Box
+                // We have to find which index matches the answer string
+                const ansIndex = opts.indexOf(q.answer);
+                if(ansIndex > -1) document.getElementById('adm-ans').value = ansIndex;
+            
+                // 4. Change UI to look like "Edit Mode"
+                const btn = document.getElementById('adm-submit-btn');
+                btn.innerText = "Update Question";
+                btn.className = "w-full bg-amber-500 text-white font-bold py-3 rounded-xl shadow hover:bg-amber-600 transition-colors";
+                
+                // 5. Switch to "Add" tab automatically so user sees the form
+                setAdminTab('add');
+                document.getElementById('adm-cat').focus();
+                showToast("Editing mode active", "success");
+          }
+
+        function resetAdminForm() {
+                appState.editingId = null;
+                document.getElementById('adm-q').value = "";
+                document.getElementById('adm-opt-1').value = "";
+                document.getElementById('adm-opt-2').value = "";
+                document.getElementById('adm-opt-3').value = "";
+                document.getElementById('adm-opt-4').value = "";
+                document.getElementById('adm-rat').value = "";
+                document.getElementById('adm-ans').value = ""; // Reset select
+                
+                // Reset Button Style
+                const btn = document.getElementById('adm-submit-btn');
+                btn.innerText = "Save Question";
+                btn.className = "w-full bg-green-600 text-white font-bold py-3 rounded-xl shadow hover:bg-green-700 transition-colors";
+            }
 
     </script>
 </body>
