@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>QuizPro | Admin Enabled</title>
+    <title>nQuiz | Advanced Nursing Learning</title>
     
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -41,22 +41,23 @@
         .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
         .glass-dark { background: rgba(17, 24, 39, 0.8); backdrop-filter: blur(12px); color: white; border: 1px solid rgba(255, 255, 255, 0.1); }
         .loader { width: 18px; height: 18px; border: 2px solid #FFF; border-bottom-color: transparent; border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; }
-        .icon-radio { border-radius: 50%; } /* Circle */
-        .icon-check { border-radius: 6px; } /* Square */
         @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        /* Admin Input Style */
         .admin-input { width: 100%; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 0.75rem; font-size: 0.875rem; transition: all 0.2s; }
         .admin-input:focus { outline: none; border-color: #3b82f6; ring: 2px; }
+        
+        /* Shape classes for Multi/Single */
+        .icon-radio { border-radius: 50%; } 
+        .icon-check { border-radius: 6px; } 
     </style>
 </head>
-<body class="text-gray-800 antialiased pb-20">
+<body class="text-gray-800 antialiased pb-20 selection:bg-brand-500 selection:text-white">
 
     <div id="toast-container" class="fixed top-5 right-5 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
 
     <nav class="fixed top-4 left-1/2 -translate-x-1/2 w-[95%] max-w-4xl glass rounded-full shadow-lg z-50 px-5 py-3 flex items-center justify-between transition-all">
-        <div class="flex items-center gap-2 cursor-pointer" onclick="goHome()">
-            <div class="bg-brand-600 text-white p-1.5 rounded-lg"><i class="ph-bold ph-heartbeat text-xl"></i></div>
-            <span class="font-bold text-lg tracking-tight hidden sm:block">Quiz<span class="text-brand-600">Pro</span></span>
+        <div class="flex items-center gap-2 cursor-pointer group" onclick="goHome()">
+            <div class="bg-brand-600 text-white p-1.5 rounded-lg group-hover:rotate-12 transition-transform"><i class="ph-bold ph-first-aid text-xl"></i></div>
+            <span class="font-extrabold text-xl tracking-tight text-gray-900">n<span class="text-brand-600">Quiz</span></span>
         </div>
         
         <div id="nav-user" class="hidden flex items-center gap-3">
@@ -71,8 +72,8 @@
     <div class="container max-w-lg mx-auto px-4 pt-32 relative z-10">
 
         <div id="auth-screen" class="glass rounded-3xl shadow-2xl p-8 animate-slide-up">
-            <h1 id="auth-title" class="text-3xl font-extrabold text-gray-900 mb-2 text-center">Welcome</h1>
-            <p class="text-gray-500 text-sm text-center mb-8">Sign in to start learning.</p>
+            <h1 id="auth-title" class="text-3xl font-extrabold text-gray-900 mb-2 text-center">nQuiz Login</h1>
+            <p class="text-gray-500 text-sm text-center mb-8">Master your nursing content.</p>
             <div class="space-y-4">
                 <input type="text" id="username" placeholder="Username" class="admin-input" autocomplete="off">
                 <input type="password" id="password" placeholder="Password" class="admin-input">
@@ -93,7 +94,7 @@
 
         <div id="submenu-screen" class="hidden animate-slide-up">
             <div class="flex items-center justify-between mb-6 text-white">
-                <button onclick="goHome()" class="w-10 h-10 rounded-full glass-dark flex items-center justify-center"><i class="ph-bold ph-arrow-left"></i></button>
+                <button onclick="goHome()" class="w-10 h-10 rounded-full glass-dark flex items-center justify-center hover:bg-white hover:text-gray-900 transition-colors"><i class="ph-bold ph-arrow-left"></i></button>
                 <h2 id="submenu-title" class="text-xl font-bold">Topics</h2>
                 <div class="w-10"></div>
             </div>
@@ -103,44 +104,48 @@
         <div id="session-screen" class="hidden">
             <div class="glass rounded-3xl shadow-xl overflow-hidden animate-slide-up min-h-[500px] flex flex-col">
                 <div class="bg-gray-50 px-6 py-4 flex items-center justify-between border-b border-gray-100">
-                    <button onclick="goSubmenu()" class="text-gray-400 text-sm font-bold flex items-center gap-1">QUIT</button>
+                    <button onclick="goSubmenu()" class="text-gray-400 text-sm font-bold flex items-center gap-1 hover:text-gray-600">QUIT</button>
                     <span id="session-progress" class="text-xs font-bold text-gray-500">1/10</span>
                 </div>
                 <div class="p-6 md:p-8 flex-1 flex flex-col">
                     <h2 id="q-text" class="text-xl font-bold text-gray-800 leading-snug mb-8"></h2>
                     <div id="options-area" class="space-y-3 mb-6"></div>
-                    <div id="rationale-area" class="hidden rounded-xl bg-blue-50 border border-blue-100 p-5 mb-4"><p id="rationale-text" class="text-blue-900 text-sm"></p></div>
-                    <button id="action-btn" class="hidden w-full bg-gray-900 text-white font-bold py-4 rounded-xl shadow-lg">Continue</button>
+                    <div id="rationale-area" class="hidden rounded-xl bg-blue-50 border border-blue-100 p-5 mb-4 relative">
+                         <div class="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-l-xl"></div>
+                         <h4 class="text-xs font-bold text-blue-500 uppercase mb-1">Rationale</h4>
+                         <p id="rationale-text" class="text-blue-900 text-sm leading-relaxed"></p>
+                    </div>
+                    <button id="action-btn" class="hidden w-full bg-gray-900 hover:bg-black text-white font-bold py-4 rounded-xl shadow-lg transition-transform active:scale-[0.99]">Continue</button>
                 </div>
             </div>
         </div>
 
         <div id="result-screen" class="hidden text-center animate-slide-up pt-10">
-            <div class="glass rounded-3xl p-8 shadow-2xl">
-                <h2 class="text-2xl font-bold text-gray-900 mb-2">Complete!</h2>
-                <div class="text-5xl font-extrabold text-brand-600 my-6" id="score-val">0%</div>
-                <button onclick="goSubmenu()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-3.5 rounded-xl">Back</button>
+            <div class="glass rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+                <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 bg-brand-500/20 blur-3xl rounded-full pointer-events-none"></div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Session Complete!</h2>
+                <div class="text-6xl font-extrabold text-brand-600 my-8 tracking-tighter" id="score-val">0%</div>
+                <button onclick="goSubmenu()" class="w-full bg-white border border-gray-200 hover:border-brand-500 text-gray-700 hover:text-brand-600 font-bold py-3.5 rounded-xl transition-all">Back to Topics</button>
             </div>
         </div>
 
         <div id="admin-screen" class="hidden animate-slide-up">
             <div class="flex items-center justify-between mb-6 text-white">
                 <button onclick="goHome()" class="w-10 h-10 rounded-full glass-dark flex items-center justify-center"><i class="ph-bold ph-arrow-left"></i></button>
-                <h2 class="text-xl font-bold">Admin Panel</h2>
+                <h2 class="text-xl font-bold">Admin Dashboard</h2>
                 <div class="w-10"></div>
             </div>
 
             <div class="glass p-1.5 rounded-xl flex mb-6">
-                <button onclick="setAdminTab('add')" id="admin-tab-add" class="flex-1 py-2 rounded-lg text-xs font-bold bg-brand-600 text-white shadow">Add New</button>
+                <button onclick="setAdminTab('add')" id="admin-tab-add" class="flex-1 py-2 rounded-lg text-xs font-bold bg-brand-600 text-white shadow">Add / Edit</button>
                 <button onclick="setAdminTab('bulk')" id="admin-tab-bulk" class="flex-1 py-2 rounded-lg text-xs font-bold text-gray-500">Bulk JSON</button>
             </div>
 
             <div id="admin-view-add" class="glass p-6 rounded-3xl">
-                <h3 class="font-bold text-lg mb-4">Create Question</h3>
+                <h3 class="font-bold text-lg mb-4">Question Editor</h3>
                 <div class="space-y-3">
                     <input id="adm-cat" class="admin-input" placeholder="Category (e.g. Pharmacology)">
                     <input id="adm-sub" class="admin-input" placeholder="Subject (e.g. Week 1)">
-                    
                     <textarea id="adm-q" class="admin-input h-24" placeholder="Question Text"></textarea>
                     
                     <div class="grid grid-cols-2 gap-2">
@@ -149,7 +154,7 @@
                         <input id="adm-opt-3" class="admin-input" placeholder="Option C">
                         <input id="adm-opt-4" class="admin-input" placeholder="Option D">
                     </div>
-            
+
                     <div class="glass bg-white/50 p-4 rounded-xl border border-gray-200">
                         <label class="text-xs font-bold text-gray-500 uppercase mb-2 block">Correct Answer(s)</label>
                         <div class="space-y-2">
@@ -171,7 +176,7 @@
                             </label>
                         </div>
                     </div>
-            
+
                     <textarea id="adm-rat" class="admin-input h-20" placeholder="Rationale (Explanation)"></textarea>
                     
                     <button onclick="submitSingleQuestion()" id="adm-submit-btn" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl shadow hover:bg-green-700 transition-colors">Save Question</button>
@@ -181,22 +186,22 @@
 
             <div id="admin-view-bulk" class="glass p-6 rounded-3xl hidden">
                 <h3 class="font-bold text-lg mb-2">Bulk Upload</h3>
-                <p class="text-xs text-gray-500 mb-4">Paste a JSON array of question objects.</p>
+                <p class="text-xs text-gray-500 mb-4">Paste JSON array.</p>
                 <textarea id="adm-bulk-text" class="admin-input h-64 font-mono text-xs" placeholder='[{"category":"...","question":"...","options":["A","B"],"answer":"A","rationale":"..."}]'></textarea>
                 <button onclick="submitBulk()" class="w-full mt-4 bg-brand-600 text-white font-bold py-3 rounded-xl shadow">Upload JSON</button>
             </div>
 
             <div class="mt-8">
-                <h3 class="text-white font-bold mb-4">Recent Questions</h3>
+                <h3 class="text-white font-bold mb-4">Manage Questions</h3>
                 <div id="admin-list" class="space-y-3"></div>
             </div>
         </div>
 
     </div>
 
-    <div id="loading-screen" class="hidden fixed inset-0 z-50 flex flex-col items-center justify-center bg-gray-900 bg-opacity-90">
+    <div id="loading-screen" class="hidden fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gray-900/90 backdrop-blur-sm">
         <div class="loader"></div>
-        <div class="text-white mt-4 font-bold">Loading...</div>
+        <div class="text-white mt-4 font-bold tracking-wide">Processing...</div>
     </div>
 
     <script>
@@ -212,23 +217,28 @@
             editingId: null 
         };
 
+        // --- ICONS ---
+        const ICONS = {
+            "Pharmacology": "ph-pill", "Anatomy": "ph-bone", "Pediatrics": "ph-baby", 
+            "Physiology": "ph-heartbeat", "Nutrition": "ph-apple", "General": "ph-books",
+            "Cardiology": "ph-heart", "Psychiatric": "ph-brain", "Default": "ph-folder"
+        };
+
         // --- UTILS ---
         function showToast(msg, type='success') {
             const el = document.createElement('div');
-            el.className = `${type==='error'?'bg-red-500':'bg-green-500'} text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 text-sm font-bold pointer-events-auto animate-slide-up`;
-            el.innerHTML = `<i class="ph-bold ${type==='error'?'ph-warning-circle':'ph-check-circle'}"></i> ${msg}`;
+            el.className = `${type==='error'?'bg-red-500':'bg-green-500'} text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-2 text-sm font-bold pointer-events-auto animate-slide-up border border-white/20`;
+            el.innerHTML = `<i class="ph-bold ${type==='error'?'ph-warning-circle':'ph-check-circle'} text-lg"></i> ${msg}`;
             document.getElementById('toast-container').appendChild(el);
             setTimeout(() => el.remove(), 3000);
         }
 
-        function showLoading(show) {
-            document.getElementById('loading-screen').classList.toggle('hidden', !show);
-        }
+        function showLoading(show) { document.getElementById('loading-screen').classList.toggle('hidden', !show); }
 
         // --- AUTH ---
         window.onload = () => {
             const u = localStorage.getItem('quizUser');
-            if(u) handleAuth(u, localStorage.getItem('quizPass'), true); // Auto-login
+            if(u) handleAuth(u, localStorage.getItem('quizPass'), true);
         };
 
         async function handleAuth(uInput, pInput, isAuto = false) {
@@ -240,24 +250,21 @@
 
             try {
                 if(appState.isSignUp && !isAuto) {
-                    // Sign Up Logic
                     const { data } = await _supabase.from('users').select('*').eq('username', u);
                     if(data.length) throw new Error("Username taken");
-                    const { error } = await _supabase.from('users').insert({ username: u, password: p, is_admin: false }); // Default not admin
+                    const { error } = await _supabase.from('users').insert({ username: u, password: p, is_admin: false });
                     if(error) throw error;
                     showToast("Account created!");
                 } 
                 
-                // Log In Logic
                 const { data, error } = await _supabase.from('users').select('*').eq('username', u).eq('password', p);
                 if(error || !data.length) throw new Error("Invalid login");
 
-                // Success
                 appState.user = u;
-                appState.isAdmin = data[0].is_admin; // CHECK DATABASE COLUMN
+                appState.isAdmin = data[0].is_admin;
                 
                 localStorage.setItem('quizUser', u);
-                localStorage.setItem('quizPass', p); // Storing plain text pass in local storage is weak security, but fits this prototype.
+                localStorage.setItem('quizPass', p);
 
                 if(appState.isAdmin) {
                     document.getElementById('nav-admin-btn').classList.remove('hidden');
@@ -273,25 +280,21 @@
 
         function toggleAuthMode() {
             appState.isSignUp = !appState.isSignUp;
-            document.getElementById('auth-title').innerText = appState.isSignUp ? "Create Account" : "Welcome";
+            document.getElementById('auth-title').innerText = appState.isSignUp ? "Create Account" : "nQuiz Login";
             document.getElementById('auth-btn').innerText = appState.isSignUp ? "Sign Up" : "Log In";
             document.getElementById('toggle-link').innerText = appState.isSignUp ? "Back to Login" : "Create Account";
         }
 
-        function signOut() {
-            localStorage.clear(); location.reload();
-        }
+        function signOut() { localStorage.clear(); location.reload(); }
 
-        // --- DATA LOADING ---
+        // --- DATA ---
         async function loadData() {
             try {
                 const { data } = await _supabase.from('questions').select('*');
                 appState.data = data || [];
-                
                 document.getElementById('auth-screen').classList.add('hidden');
                 document.getElementById('nav-user').classList.remove('hidden');
                 document.getElementById('display-user').innerText = appState.user;
-                
                 showLoading(false);
                 goHome();
             } catch(e) { showToast("Error loading data", "error"); showLoading(false); }
@@ -313,13 +316,14 @@
             const cats = [...new Set(appState.data.map(q => q.category || 'General'))].sort();
             const grid = document.getElementById('categories-grid');
             grid.innerHTML = "";
-            cats.forEach(cat => {
+            cats.forEach((cat, idx) => {
                 const count = appState.data.filter(q => (q.category||'General') === cat).length;
+                const icon = ICONS[cat] || ICONS['Default'];
                 grid.innerHTML += `
-                <div onclick="openCategory('${cat}')" class="glass p-5 rounded-2xl cursor-pointer hover:bg-white transition-all">
-                    <div class="w-10 h-10 rounded-lg bg-brand-100 text-brand-600 flex items-center justify-center mb-3 text-xl"><i class="ph-duotone ph-books"></i></div>
-                    <h3 class="font-bold">${cat}</h3>
-                    <p class="text-xs text-gray-500">${count} Qs</p>
+                <div onclick="openCategory('${cat}')" class="glass p-5 rounded-2xl cursor-pointer hover:bg-white transition-all group animate-slide-up" style="animation-delay: ${idx*50}ms">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 text-white flex items-center justify-center mb-3 text-2xl shadow-lg group-hover:scale-110 transition-transform"><i class="ph-duotone ${icon}"></i></div>
+                    <h3 class="font-bold text-lg">${cat}</h3>
+                    <p class="text-xs text-gray-500 mt-1">${count} Questions</p>
                 </div>`;
             });
         }
@@ -331,9 +335,17 @@
             const subs = [...new Set(appState.data.filter(q=>(q.category||'General')===cat).map(q=>q.subject))].sort();
             const grid = document.getElementById('topics-grid');
             grid.innerHTML = "";
-            subs.forEach(sub => {
-                grid.innerHTML += `<div onclick="startSession('${sub}')" class="glass p-4 rounded-xl flex justify-between items-center cursor-pointer hover:bg-white"><span class="font-bold text-gray-700">${sub}</span><i class="ph-bold ph-caret-right text-gray-400"></i></div>`;
+            subs.forEach((sub, idx) => {
+                grid.innerHTML += `<div onclick="startSession('${sub}')" class="glass p-4 rounded-xl flex justify-between items-center cursor-pointer hover:bg-white hover:shadow-md transition-all animate-slide-up" style="animation-delay:${idx*50}ms"><span class="font-bold text-gray-700">${sub}</span><i class="ph-bold ph-caret-right text-gray-400"></i></div>`;
             });
+        }
+
+        function goSubmenu() { if(appState.currentCategory) openCategory(appState.currentCategory); else goHome(); }
+        
+        function setMode(m) { 
+            appState.mode = m; 
+            document.getElementById('tab-study').className = m==='study' ? "flex-1 py-3 rounded-xl text-sm font-bold bg-white text-brand-600 shadow-md transform scale-100" : "flex-1 py-3 rounded-xl text-sm font-bold text-gray-500 hover:text-gray-700";
+            document.getElementById('tab-test').className = m==='test' ? "flex-1 py-3 rounded-xl text-sm font-bold bg-white text-brand-600 shadow-md transform scale-100" : "flex-1 py-3 rounded-xl text-sm font-bold text-gray-500 hover:text-gray-700";
         }
 
         // --- QUIZ LOGIC ---
@@ -345,57 +357,51 @@
             loadCard();
         }
 
-       function loadCard() {
+        function loadCard() {
             const q = appState.currentSet[appState.index];
             const isStudy = appState.mode === 'study';
             
-            // UI Updates
             document.getElementById('q-text').innerText = q.question;
             document.getElementById('session-progress').innerText = `${appState.index+1}/${appState.currentSet.length}`;
             document.getElementById('rationale-area').classList.add('hidden');
             
-            // Important: For Multi-select, we ALWAYS need a submit button, even in study mode
             const actionBtn = document.getElementById('action-btn');
             actionBtn.classList.add('hidden');
             
-            // Reset User Selection
             q.userSelected = q.type === 'multi' ? [] : null; 
-        
+
             const box = document.getElementById('options-area');
             box.innerHTML = "";
             
-            // Create Tag for "Select All That Apply"
             if(q.type === 'multi') {
                 const hint = document.createElement('div');
-                hint.className = "text-xs font-bold text-brand-600 uppercase mb-2 tracking-wider";
-                hint.innerText = "Select All That Apply";
+                hint.className = "text-xs font-bold text-brand-600 uppercase mb-2 tracking-wider flex items-center gap-1 animate-slide-up";
+                hint.innerHTML = "<i class='ph-bold ph-check-square'></i> Select All That Apply";
                 box.appendChild(hint);
             }
-        
+
             let opts = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
             
-            opts.forEach(opt => {
+            opts.forEach((opt, idx) => {
                 const btn = document.createElement('button');
-                // Base styling
-                btn.className = "w-full text-left p-4 rounded-xl bg-white border border-gray-100 hover:border-brand-500 transition-all shadow-sm mb-2 group";
+                btn.className = "w-full text-left p-4 rounded-xl bg-white border border-gray-100 hover:border-brand-500 transition-all shadow-sm mb-2 group animate-slide-up";
+                btn.style.animationDelay = `${idx * 50}ms`;
                 
-                // Icon based on type
                 const iconShape = q.type === 'multi' ? 'icon-check' : 'icon-radio';
                 
                 btn.innerHTML = `
                     <div class="flex items-start gap-3 pointer-events-none">
-                        <div class="mt-1 w-5 h-5 border-2 border-gray-300 group-hover:border-brand-400 flex items-center justify-center transition-colors ${iconShape}">
+                        <div class="mt-0.5 w-5 h-5 border-2 border-gray-300 group-hover:border-brand-400 flex items-center justify-center transition-colors ${iconShape}">
                             <div class="w-2.5 h-2.5 bg-brand-500 opacity-0 transition-opacity ${iconShape} check-mark"></div>
                         </div>
                         <span class="flex-1 text-gray-700 font-medium leading-relaxed">${opt}</span>
                     </div>`;
-        
+
                 btn.onclick = () => {
-                    // IF SINGLE CHOICE
+                    // SINGLE
                     if (q.type !== 'multi') {
-                        if(document.querySelector('.selected')) return; // Block logic if already answered
+                        if(document.querySelector('.selected')) return; 
                         
-                        // Visually select
                         document.querySelectorAll('.selected').forEach(el => {
                             el.classList.remove('selected', 'bg-brand-50', 'border-brand-500');
                             el.querySelector('.check-mark').classList.add('opacity-0');
@@ -403,37 +409,30 @@
                         
                         btn.classList.add('selected', 'bg-brand-50', 'border-brand-500');
                         btn.querySelector('.check-mark').classList.remove('opacity-0');
-                        
                         q.userSelected = opt;
                         
-                        // In Study mode, reveal immediately. In Test mode, wait for button.
                         if(isStudy) reveal(q);
                         else {
                             actionBtn.innerText = "Submit Answer";
                             actionBtn.classList.remove('hidden');
-                            actionBtn.onclick = () => reveal(q); // Test mode reveal logic
+                            actionBtn.onclick = () => reveal(q);
                         }
                     } 
-                    // IF MULTI SELECT
+                    // MULTI
                     else {
-                        if(btn.disabled) return; // Prevent clicking after submit
+                        if(btn.disabled) return; 
                         
                         const isSelected = btn.classList.contains('selected');
-                        
-                        // Toggle Visuals
                         if (isSelected) {
                             btn.classList.remove('selected', 'bg-brand-50', 'border-brand-500');
                             btn.querySelector('.check-mark').classList.add('opacity-0');
-                            // Remove from array
                             q.userSelected = q.userSelected.filter(item => item !== opt);
                         } else {
                             btn.classList.add('selected', 'bg-brand-50', 'border-brand-500');
                             btn.querySelector('.check-mark').classList.remove('opacity-0');
-                            // Add to array
                             q.userSelected.push(opt);
                         }
-        
-                        // Show Submit Button immediately when at least one is selected
+
                         if(q.userSelected.length > 0) {
                             actionBtn.innerText = "Submit Answer";
                             actionBtn.classList.remove('hidden');
@@ -450,32 +449,21 @@
         function reveal(q) {
             const opts = document.querySelectorAll('#options-area button');
             let isCorrect = false;
-        
-            // --- CHECK ANSWER ---
+
             if(q.type === 'multi') {
-                // Parse correct answers (stored as JSON string in DB)
                 const correctArr = typeof q.answer === 'string' ? JSON.parse(q.answer) : q.answer;
-                
-                // Sort both arrays to compare them regardless of order
                 const userSorted = JSON.stringify(q.userSelected.sort());
                 const correctSorted = JSON.stringify(correctArr.sort());
-                
                 isCorrect = (userSorted === correctSorted);
             } else {
-                // Simple string comparison for Single Choice
                 isCorrect = (q.userSelected === q.answer);
             }
-        
-            // --- COLOR THE BUTTONS ---
+
             opts.forEach(b => {
-                b.disabled = true; // Stop interaction
-                b.style.cursor = 'default';
+                b.disabled = true; b.style.cursor = 'default';
                 const text = b.innerText.trim();
-                
-                // Logic to highlight Correct vs Wrong
                 const isSelected = b.classList.contains('selected');
                 
-                // Is this option one of the correct answers?
                 let isThisCorrectOption = false;
                 if(q.type === 'multi') {
                     const correctArr = typeof q.answer === 'string' ? JSON.parse(q.answer) : q.answer;
@@ -483,31 +471,24 @@
                 } else {
                     isThisCorrectOption = (text === q.answer);
                 }
-        
-                // Apply Colors
+
                 if (isThisCorrectOption) {
-                    // It was a correct answer
                     b.classList.remove('bg-white', 'bg-brand-50', 'border-brand-500', 'border-gray-100');
                     b.classList.add('bg-green-100', 'border-green-500', 'text-green-900');
-                    // Add Checkmark Icon if missing
                     if(!b.innerHTML.includes('ph-check')) {
                         b.innerHTML += `<i class="ph-bold ph-check text-green-600 absolute right-4 top-1/2 -translate-y-1/2 text-xl"></i>`;
                         b.classList.add('relative');
                     }
                 } else if (isSelected && !isThisCorrectOption) {
-                    // User picked it, but it was wrong
                     b.classList.remove('bg-brand-50', 'border-brand-500');
                     b.classList.add('bg-red-100', 'border-red-500', 'text-red-900');
                 } else {
-                    // Not selected, not correct (Fade it out)
                     b.classList.add('opacity-50');
                 }
             });
-        
-            // Update Score (Only if in Test mode)
+
             if(appState.mode === 'test' && isCorrect) appState.score++;
-        
-            // Show Rationale & Next Button
+
             document.getElementById('rationale-text').innerText = q.rationale || "No rationale.";
             document.getElementById('rationale-area').classList.remove('hidden');
             
@@ -518,24 +499,18 @@
         }
 
         function nextCard() {
-            if(appState.mode==='test' && appState.currentSet[appState.index].userSelected === appState.currentSet[appState.index].answer) appState.score++;
             appState.index++;
             if(appState.index < appState.currentSet.length) loadCard();
             else {
                 hideAll();
                 document.getElementById('result-screen').classList.remove('hidden');
-                document.getElementById('score-val').innerText = Math.round((appState.score/appState.currentSet.length)*100)+"%";
+                const pct = Math.round((appState.score/appState.currentSet.length)*100);
+                document.getElementById('score-val').innerText = pct+"%";
+                if(pct >= 80) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
             }
         }
 
-        function goSubmenu() { if(appState.currentCategory) openCategory(appState.currentCategory); else goHome(); }
-        function setMode(m) { 
-            appState.mode = m; 
-            document.getElementById('tab-study').className = m==='study' ? "flex-1 py-3 rounded-xl text-sm font-bold bg-white text-brand-600 shadow-md" : "flex-1 py-3 rounded-xl text-sm font-bold text-gray-500";
-            document.getElementById('tab-test').className = m==='test' ? "flex-1 py-3 rounded-xl text-sm font-bold bg-white text-brand-600 shadow-md" : "flex-1 py-3 rounded-xl text-sm font-bold text-gray-500";
-        }
-
-        // --- ADMIN LOGIC ---
+        // --- ADMIN ---
         function openAdminPanel() {
             if(!appState.isAdmin) return showToast("Access Denied", "error");
             hideAll();
@@ -556,52 +531,37 @@
             const q = document.getElementById('adm-q').value;
             const rat = document.getElementById('adm-rat').value;
             
-            // Get Options
             const opts = [
                 document.getElementById('adm-opt-1').value,
                 document.getElementById('adm-opt-2').value,
                 document.getElementById('adm-opt-3').value,
                 document.getElementById('adm-opt-4').value
             ].filter(o => o.trim() !== "");
-        
-            // Get Selected Answers (Indices)
+
             const selectedIndices = [];
             if(document.getElementById('adm-check-0').checked) selectedIndices.push(0);
             if(document.getElementById('adm-check-1').checked) selectedIndices.push(1);
             if(document.getElementById('adm-check-2').checked) selectedIndices.push(2);
             if(document.getElementById('adm-check-3').checked) selectedIndices.push(3);
-        
+
             if(!cat || !sub || !q || opts.length < 2 || selectedIndices.length === 0) {
-                return showToast("Fill all fields & select at least one answer", "error");
+                return showToast("Fill all fields & select an answer", "error");
             }
-        
-            // Determine Type & Answer Format
+
             let type = 'single';
             let finalAnswer = "";
-        
+
             if (selectedIndices.length > 1) {
                 type = 'multi';
-                // For multi, answer is JSON string array: '["Option A", "Option C"]'
-                const ansArray = selectedIndices.map(i => opts[i]);
-                finalAnswer = JSON.stringify(ansArray);
+                finalAnswer = JSON.stringify(selectedIndices.map(i => opts[i]));
             } else {
                 type = 'single';
-                // For single, answer is just string: "Option A"
                 finalAnswer = opts[selectedIndices[0]];
             }
-        
-            const payload = {
-                category: cat,
-                subject: sub,
-                question: q,
-                options: opts, // Supabase stores JSON array automatically
-                answer: finalAnswer,
-                rationale: rat,
-                type: type // <--- New Field
-            };
-        
+
+            const payload = { category: cat, subject: sub, question: q, options: opts, answer: finalAnswer, rationale: rat, type: type };
+
             showLoading(true);
-        
             let error;
             if (appState.editingId) {
                 const res = await _supabase.from('questions').update(payload).eq('id', appState.editingId);
@@ -610,59 +570,97 @@
                 const res = await _supabase.from('questions').insert(payload);
                 error = res.error;
             }
-        
             showLoading(false);
-        
-            if(error) {
-                console.error(error);
-                showToast("Failed to save: " + error.message, "error");
-            } else {
+
+            if(error) showToast("Failed to save", "error");
+            else {
                 showToast(appState.editingId ? "Updated!" : "Saved!");
                 resetAdminForm();
                 loadData();
             }
         }
 
+        function editQuestion(id) {
+            const q = appState.data.find(x => x.id == id);
+            if(!q) return;
+
+            appState.editingId = id;
+
+            document.getElementById('adm-cat').value = q.category;
+            document.getElementById('adm-sub').value = q.subject;
+            document.getElementById('adm-q').value = q.question;
+            document.getElementById('adm-rat').value = q.rationale;
+
+            let opts = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
+            document.getElementById('adm-opt-1').value = opts[0] || "";
+            document.getElementById('adm-opt-2').value = opts[1] || "";
+            document.getElementById('adm-opt-3').value = opts[2] || "";
+            document.getElementById('adm-opt-4').value = opts[3] || "";
+
+            [0,1,2,3].forEach(i => document.getElementById(`adm-check-${i}`).checked = false);
+
+            if (q.type === 'multi') {
+                const correctArr = typeof q.answer === 'string' ? JSON.parse(q.answer) : q.answer;
+                correctArr.forEach(ans => {
+                    const idx = opts.indexOf(ans);
+                    if(idx > -1) document.getElementById(`adm-check-${idx}`).checked = true;
+                });
+            } else {
+                const idx = opts.indexOf(q.answer);
+                if(idx > -1) document.getElementById(`adm-check-${idx}`).checked = true;
+            }
+
+            const btn = document.getElementById('adm-submit-btn');
+            btn.innerText = "Update Question";
+            btn.className = "w-full bg-amber-500 text-white font-bold py-3 rounded-xl shadow hover:bg-amber-600 transition-colors";
+            
+            setAdminTab('add');
+            showToast("Editing mode active");
+        }
+
+        function resetAdminForm() {
+            appState.editingId = null;
+            document.getElementById('adm-q').value = "";
+            document.getElementById('adm-opt-1').value = "";
+            document.getElementById('adm-opt-2').value = "";
+            document.getElementById('adm-opt-3').value = "";
+            document.getElementById('adm-opt-4').value = "";
+            document.getElementById('adm-rat').value = "";
+            [0,1,2,3].forEach(i => document.getElementById(`adm-check-${i}`).checked = false);
+            
+            const btn = document.getElementById('adm-submit-btn');
+            btn.innerText = "Save Question";
+            btn.className = "w-full bg-green-600 text-white font-bold py-3 rounded-xl shadow hover:bg-green-700 transition-colors";
+        }
+
         async function submitBulk() {
-            const txt = document.getElementById('adm-bulk-text').value;
             try {
-                const json = JSON.parse(txt);
-                if(!Array.isArray(json)) throw new Error("Must be an array [...]");
-                
+                const json = JSON.parse(document.getElementById('adm-bulk-text').value);
+                if(!Array.isArray(json)) throw new Error("Must be array");
                 showLoading(true);
                 const { error } = await _supabase.from('questions').insert(json);
                 showLoading(false);
-                
                 if(error) throw error;
-                showToast(`Uploaded ${json.length} questions!`);
+                showToast(`Uploaded ${json.length} items`);
                 document.getElementById('adm-bulk-text').value = "";
                 loadData();
-                loadAdminList();
-            } catch(e) {
-                showToast("Invalid JSON: " + e.message, "error");
-                showLoading(false);
-            }
+            } catch(e) { showToast("Invalid JSON", "error"); showLoading(false); }
         }
 
         function loadAdminList() {
             const list = document.getElementById('admin-list');
             list.innerHTML = "";
             const recent = appState.data.slice(-10).reverse();
-            
             recent.forEach(q => {
                 list.innerHTML += `
                 <div class="glass p-4 rounded-xl flex justify-between items-start animate-slide-up">
                     <div class="w-2/3">
-                        <span class="text-[10px] uppercase font-bold text-brand-600 bg-brand-50 px-2 py-1 rounded">${q.category}</span>
-                        <p class="text-sm font-bold mt-2 truncate">${q.question}</p>
+                        <span class="text-[10px] uppercase font-bold text-brand-600 bg-brand-50 px-2 py-1 rounded border border-brand-100">${q.category}</span>
+                        <p class="text-sm font-bold mt-2 truncate text-gray-700">${q.question}</p>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="editQuestion('${q.id}')" class="bg-blue-100 text-blue-600 p-2 rounded-lg hover:bg-blue-200 transition-colors">
-                            <i class="ph-bold ph-pencil-simple"></i>
-                        </button>
-                        <button onclick="deleteQuestion('${q.id}')" class="bg-red-100 text-red-500 p-2 rounded-lg hover:bg-red-200 transition-colors">
-                            <i class="ph-bold ph-trash"></i>
-                        </button>
+                        <button onclick="editQuestion('${q.id}')" class="bg-blue-50 text-blue-600 p-2 rounded-lg hover:bg-blue-100 transition-colors"><i class="ph-bold ph-pencil-simple"></i></button>
+                        <button onclick="deleteQuestion('${q.id}')" class="bg-red-50 text-red-500 p-2 rounded-lg hover:bg-red-100 transition-colors"><i class="ph-bold ph-trash"></i></button>
                     </div>
                 </div>`;
             });
@@ -674,73 +672,12 @@
             const { error } = await _supabase.from('questions').delete().eq('id', id);
             if(error) showToast("Delete failed", "error");
             else {
-                showToast("Deleted");
-                // Remove from local state manually to avoid full reload
                 appState.data = appState.data.filter(q => q.id != id); 
                 loadAdminList();
+                showToast("Deleted");
             }
             showLoading(false);
         }
-
-        function editQuestion(id) {
-            const q = appState.data.find(x => x.id == id);
-            if(!q) return;
-        
-            appState.editingId = id;
-        
-            // Populate Text Fields
-            document.getElementById('adm-cat').value = q.category;
-            document.getElementById('adm-sub').value = q.subject;
-            document.getElementById('adm-q').value = q.question;
-            document.getElementById('adm-rat').value = q.rationale;
-        
-            // Populate Options
-            let opts = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
-            document.getElementById('adm-opt-1').value = opts[0] || "";
-            document.getElementById('adm-opt-2').value = opts[1] || "";
-            document.getElementById('adm-opt-3').value = opts[2] || "";
-            document.getElementById('adm-opt-4').value = opts[3] || "";
-        
-            // Reset Checkboxes
-            [0,1,2,3].forEach(i => document.getElementById(`adm-check-${i}`).checked = false);
-        
-            // Populate Checkboxes based on Answer
-            if (q.type === 'multi') {
-                const correctArr = typeof q.answer === 'string' ? JSON.parse(q.answer) : q.answer;
-                correctArr.forEach(ans => {
-                    const idx = opts.indexOf(ans);
-                    if(idx > -1) document.getElementById(`adm-check-${idx}`).checked = true;
-                });
-            } else {
-                const idx = opts.indexOf(q.answer);
-                if(idx > -1) document.getElementById(`adm-check-${idx}`).checked = true;
-            }
-        
-            // UI Updates
-            const btn = document.getElementById('adm-submit-btn');
-            btn.innerText = "Update Question";
-            btn.className = "w-full bg-amber-500 text-white font-bold py-3 rounded-xl shadow hover:bg-amber-600 transition-colors";
-            
-            setAdminTab('add');
-            showToast("Editing mode active", "success");
-        }
-        
-        function resetAdminForm() {
-                appState.editingId = null;
-                document.getElementById('adm-q').value = "";
-                document.getElementById('adm-opt-1').value = "";
-                document.getElementById('adm-opt-2').value = "";
-                document.getElementById('adm-opt-3').value = "";
-                document.getElementById('adm-opt-4').value = "";
-                document.getElementById('adm-rat').value = "";
-                document.getElementById('adm-ans').value = ""; // Reset select
-                
-                // Reset Button Style
-                const btn = document.getElementById('adm-submit-btn');
-                btn.innerText = "Save Question";
-                btn.className = "w-full bg-green-600 text-white font-bold py-3 rounded-xl shadow hover:bg-green-700 transition-colors";
-            }
-
     </script>
 </body>
 </html>
