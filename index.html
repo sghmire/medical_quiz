@@ -2,53 +2,74 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Nursing Quiz Pro</title>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #2563eb; --accent: #3b82f6; --bg: #f3f4f6; --text: #1f2937; --radius: 16px; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-top: 70px; }
+        :root { 
+            --primary: #2563eb; 
+            --primary-dark: #1d4ed8;
+            --accent: #3b82f6; 
+            --bg: #f3f4f6; 
+            --text: #1f2937; 
+            --radius: 16px; 
+            --danger: #ef4444;
+            --success: #059669;
+        }
+        
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-top: 70px; -webkit-tap-highlight-color: transparent; }
         
         /* NAV */
-        nav { position: fixed; top: 0; left: 0; width: 100%; height: 60px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; padding: 0 20px; z-index: 100; justify-content: space-between; }
+        nav { position: fixed; top: 0; left: 0; width: 100%; height: 60px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; padding: 0 20px; z-index: 100; justify-content: space-between; box-sizing: border-box; }
         .nav-brand { font-weight: 800; font-size: 1.2rem; color: var(--primary); display: flex; align-items: center; gap: 8px; cursor: pointer; }
-        .user-tag { font-size: 0.85rem; font-weight: 600; color: #6b7280; background: #f3f4f6; padding: 4px 10px; border-radius: 20px; }
-        .logout-btn { background: none; border: none; color: #ef4444; font-weight: 600; cursor: pointer; font-size: 0.85rem; margin-left: 10px; }
+        .user-tag { font-size: 0.85rem; font-weight: 600; color: #6b7280; background: #f3f4f6; padding: 6px 12px; border-radius: 20px; }
+        .logout-btn { background: none; border: none; color: var(--danger); font-weight: 600; cursor: pointer; font-size: 0.85rem; margin-left: 10px; }
 
         /* LAYOUT */
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .card { background: white; padding: 30px; border-radius: var(--radius); box-shadow: 0 4px 20px -5px rgba(0,0,0,0.1); text-align: center; margin-bottom: 20px; position: relative; }
+        .card { background: white; padding: 30px; border-radius: var(--radius); box-shadow: 0 4px 20px -5px rgba(0,0,0,0.1); text-align: center; margin-bottom: 20px; position: relative; animation: fadeIn 0.3s ease; }
         
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
         /* INPUTS & BUTTONS */
         input { width: 100%; padding: 14px; margin: 10px 0; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 1rem; box-sizing: border-box; text-align: center; transition: border 0.2s; }
         input:focus { border-color: var(--primary); outline: none; }
-        button { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 600; cursor: pointer; width: 100%; font-size: 1rem; transition: transform 0.1s; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); }
-        button:active { transform: scale(0.98); }
-        button.text-btn { background: none; color: #6b7280; border: none; box-shadow: none; width: auto; padding: 5px 10px; font-size: 0.85rem; }
+        
+        button.primary-btn { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 600; cursor: pointer; width: 100%; font-size: 1rem; transition: transform 0.1s, background 0.2s; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); }
+        button.primary-btn:active { transform: scale(0.98); }
+        button.primary-btn:hover { background: var(--primary-dark); }
+        button.primary-btn:disabled { background: #9ca3af; transform: none; cursor: not-allowed; }
+
+        button.text-btn { background: none; color: #6b7280; border: none; cursor: pointer; padding: 8px 12px; font-size: 0.9rem; border-radius: 8px; }
         button.text-btn:hover { color: var(--primary); background: #f3f4f6; }
         
         /* TILES & GRIDS */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
-        .tile { background: white; border: 2px solid #e5e7eb; border-radius: 16px; padding: 20px 10px; cursor: pointer; transition: all 0.2s; text-align: center; }
+        .tile { background: white; border: 2px solid #e5e7eb; border-radius: 16px; padding: 20px 10px; cursor: pointer; transition: all 0.2s; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 120px; }
         .tile:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
         .tile-icon { font-size: 2rem; display: block; margin-bottom: 10px; }
-        .tile-name { font-weight: 700; font-size: 0.9rem; color: var(--text); }
+        .tile-name { font-weight: 700; font-size: 0.95rem; color: var(--text); line-height: 1.2; }
         
         /* QUIZ UI */
-        .option-btn { background: white; color: var(--text); border: 2px solid #e5e7eb; width: 100%; text-align: left; padding: 16px; margin-bottom: 12px; border-radius: 12px; cursor: pointer; font-size: 1rem; }
-        .option-btn:hover { border-color: var(--accent); background: #f8fafc; }
+        .option-btn { background: white; color: var(--text); border: 2px solid #e5e7eb; width: 100%; text-align: left; padding: 16px; margin-bottom: 12px; border-radius: 12px; cursor: pointer; font-size: 1rem; transition: all 0.2s; position: relative; }
+        .option-btn:hover:not(.disabled) { border-color: var(--accent); background: #f8fafc; }
         .option-btn.selected { background: var(--primary); color: white; border-color: var(--primary); }
-        .option-btn.correct { background: #d1fae5; border-color: #059669; color: #064e3b; }
-        .option-btn.wrong { opacity: 0.5; }
-        
-        .hidden { display: none; }
+        .option-btn.correct { background: #d1fae5; border-color: var(--success); color: #064e3b; }
+        .option-btn.wrong { opacity: 0.6; background: #fee2e2; border-color: var(--danger); }
+        .option-btn.disabled { cursor: default; pointer-events: none; }
+
+        .hidden { display: none !important; }
         .rationale-box { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 15px; border-radius: 10px; margin-top: 15px; text-align: left; font-size: 0.95rem; line-height: 1.5; }
         
         /* MODE SWITCH */
         .mode-switch { display: flex; background: #e5e7eb; padding: 5px; border-radius: 14px; margin-bottom: 25px; }
-        .mode-btn { flex: 1; background: transparent; color: #6b7280; box-shadow: none; padding: 12px; border-radius: 10px; }
+        .mode-btn { flex: 1; background: transparent; color: #6b7280; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
         .mode-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+        /* UTILS */
+        .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid var(--primary); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; margin: 0 auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -64,16 +85,17 @@
     <div class="container">
 
         <div id="auth-screen" class="card">
-            <h1>Welcome</h1>
+            <h1 id="auth-title">Welcome</h1>
             <p style="color:#6b7280; margin-bottom:20px;">Sign in to start learning.</p>
-            <input type="text" id="username" placeholder="Username">
+            <input type="text" id="username" placeholder="Username" autocomplete="off">
             <input type="password" id="password" placeholder="Password">
-            <button onclick="handleAuth()" id="auth-btn">Log In</button>
-            <p id="auth-error" style="color:red; display:none; margin-top:10px;"></p>
+            <button onclick="handleAuth()" id="auth-btn" class="primary-btn">Log In</button>
+            <p id="auth-error" style="color:var(--danger); display:none; margin-top:10px; font-size:0.9rem; font-weight:600;"></p>
             <p style="margin-top:20px; font-size:0.9rem; color:var(--primary); cursor:pointer;" onclick="toggleAuthMode()" id="toggle-link">Create Account</p>
         </div>
 
         <div id="loading-screen" class="card hidden">
+            <div class="loading-spinner" style="width: 40px; height: 40px; margin-bottom: 15px;"></div>
             <h2>Connecting...</h2>
         </div>
 
@@ -93,26 +115,27 @@
         <div id="submenu-screen" class="hidden">
             <div style="display:flex; align-items:center; margin-bottom:20px;">
                 <button class="text-btn" onclick="goHome()">← Back</button>
-                <h2 style="margin:0 auto; font-size:1.2rem;" id="submenu-title">Topics</h2>
-                <div style="width:50px;"></div> </div>
+                <h2 style="margin:0 auto; font-size:1.2rem; text-align: center;" id="submenu-title">Topics</h2>
+                <div style="width:60px;"></div> </div>
             <div id="topics-grid" class="grid"></div>
         </div>
 
         <div id="session-screen" class="card hidden">
             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; border-bottom:1px solid #f3f4f6; padding-bottom:15px;">
-                <button class="text-btn" onclick="goSubmenu()">← Quit</button>
+                <button class="text-btn" onclick="goSubmenu()">✕ Quit</button>
                 <span id="session-progress" style="color:#9ca3af; font-weight:600; font-size:0.9rem;">1/10</span>
             </div>
-            <h2 id="q-text" style="font-size:1.25rem; line-height:1.4; margin-bottom:25px;"></h2>
+            <h2 id="q-text" style="font-size:1.2rem; line-height:1.5; margin-bottom:25px; text-align: left;"></h2>
             <div id="options-area"></div>
             <div id="rationale-area" class="rationale-box hidden"></div>
-            <button id="action-btn" class="hidden" style="margin-top:20px;">Next</button>
+            <button id="action-btn" class="primary-btn hidden" style="margin-top:20px;">Next</button>
         </div>
 
         <div id="result-screen" class="card hidden">
-            <h2>Complete!</h2>
-            <div style="font-size:3.5rem; font-weight:800; color:var(--primary); margin:10px 0;" id="score-val"></div>
-            <button onclick="goSubmenu()" style="margin-top:20px;">Back to Topics</button>
+            <h2>Session Complete!</h2>
+            <div style="font-size:3.5rem; font-weight:800; color:var(--primary); margin:20px 0;" id="score-val"></div>
+            <p id="score-msg" style="color: #6b7280; margin-bottom: 20px;"></p>
+            <button onclick="goSubmenu()" class="primary-btn">Back to Topics</button>
         </div>
 
     </div>
@@ -122,6 +145,7 @@
         const SUPABASE_URL = "https://ilsmjyvpduvmkxoxcqin.supabase.co"; 
         const SUPABASE_KEY = "sb_publishable_7ZI3V6f0ckuxpASg3febTw_E_oxey_I";
         
+        // Initialize Supabase
         const { createClient } = supabase;
         const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -135,7 +159,8 @@
 
         const ICONS = {
             "Pharmacology": "💊", "Anatomy": "🦴", "Pediatrics": "👶", 
-            "Physiology": "❤️", "Nutrition": "🍎", "General": "📚"
+            "Physiology": "❤️", "Nutrition": "🍎", "General": "📚",
+            "Cardiology": "🫀", "Psychiatric": "🧠"
         };
 
         window.onload = function() {
@@ -147,44 +172,82 @@
         async function handleAuth() {
             const u = document.getElementById('username').value.trim();
             const p = document.getElementById('password').value.trim();
+            const btn = document.getElementById('auth-btn');
+            const err = document.getElementById('auth-error');
             
-            if(!u || !p) return alert("Fill all fields");
-            document.getElementById('auth-btn').innerText = "Working...";
+            err.style.display = 'none';
 
-            if(appState.isSignUp) {
-                const { data } = await _supabase.from('users').select('*').eq('username', u);
-                if(data.length) return alert("Username taken");
-                await _supabase.from('users').insert({ username: u, password: p });
-            } else {
-                const { data } = await _supabase.from('users').select('*').eq('username', u).eq('password', p);
-                if(!data.length) return alert("Invalid login");
+            if(!u || !p) {
+                err.innerText = "Please fill in all fields.";
+                err.style.display = 'block';
+                return;
             }
-            
-            localStorage.setItem('quizUser', u);
-            showApp(u);
+
+            btn.disabled = true;
+            btn.innerHTML = '<div class="loading-spinner"></div>';
+
+            try {
+                if(appState.isSignUp) {
+                    const { data, error } = await _supabase.from('users').select('*').eq('username', u);
+                    if(error) throw error;
+                    
+                    if(data.length > 0) {
+                        throw new Error("Username already taken.");
+                    }
+                    
+                    const { error: insertError } = await _supabase.from('users').insert({ username: u, password: p });
+                    if(insertError) throw insertError;
+                } else {
+                    const { data, error } = await _supabase.from('users').select('*').eq('username', u).eq('password', p);
+                    if(error) throw error;
+                    if(!data || data.length === 0) throw new Error("Invalid username or password.");
+                }
+                
+                localStorage.setItem('quizUser', u);
+                showApp(u);
+            } catch (e) {
+                err.innerText = e.message || "Connection error.";
+                err.style.display = 'block';
+                btn.disabled = false;
+                btn.innerText = appState.isSignUp ? "Sign Up" : "Log In";
+            }
         }
 
         function toggleAuthMode() {
             appState.isSignUp = !appState.isSignUp;
             document.getElementById('auth-title').innerText = appState.isSignUp ? "Create Account" : "Welcome";
             document.getElementById('auth-btn').innerText = appState.isSignUp ? "Sign Up" : "Log In";
-            document.getElementById('toggle-link').innerText = appState.isSignUp ? "Log In" : "Create Account";
+            document.getElementById('toggle-link').innerText = appState.isSignUp ? "Have an account? Log In" : "Create Account";
+            document.getElementById('auth-error').style.display = 'none';
         }
 
-        function signOut() { localStorage.removeItem('quizUser'); location.reload(); }
+        function signOut() { 
+            localStorage.removeItem('quizUser'); 
+            location.reload(); 
+        }
 
         // --- LOAD DATA ---
         async function showApp(user) {
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('loading-screen').classList.remove('hidden');
             
-            const { data } = await _supabase.from('questions').select('*');
-            if(data) {
-                appState.data = data;
-                document.getElementById('display-user').innerText = user;
-                document.getElementById('nav-user').classList.remove('hidden');
+            try {
+                // Fetch questions - In production, utilize pagination or RLS
+                const { data, error } = await _supabase.from('questions').select('*');
+                
+                if(error) throw error;
+                
+                if(data) {
+                    appState.data = data;
+                    document.getElementById('display-user').innerText = user;
+                    document.getElementById('nav-user').classList.remove('hidden');
+                    document.getElementById('loading-screen').classList.add('hidden');
+                    goHome();
+                }
+            } catch (e) {
+                alert("Failed to load questions: " + e.message);
                 document.getElementById('loading-screen').classList.add('hidden');
-                goHome();
+                document.getElementById('auth-screen').classList.remove('hidden');
             }
         }
 
@@ -193,8 +256,8 @@
             hideAll();
             document.getElementById('dashboard-screen').classList.remove('hidden');
             
-            // Get unique Categories (Pharmacology, Anatomy, etc.)
-            const categories = [...new Set(appState.data.map(q => q.category || 'General'))];
+            // Get unique Categories
+            const categories = [...new Set(appState.data.map(q => q.category || 'General'))].sort();
             const grid = document.getElementById('categories-grid');
             grid.innerHTML = "";
 
@@ -205,7 +268,7 @@
                 <div class="tile" onclick="openCategory('${cat}')">
                     <span class="tile-icon">${icon}</span>
                     <div class="tile-name">${cat}</div>
-                    <div style="font-size:0.75rem; color:#9ca3af; margin-top:5px;">${count} Qs</div>
+                    <div style="font-size:0.75rem; color:#9ca3af; margin-top:5px;">${count} Questions</div>
                 </div>`;
             });
         }
@@ -216,23 +279,23 @@
             document.getElementById('submenu-screen').classList.remove('hidden');
             document.getElementById('submenu-title').innerText = cat;
 
-            // Get unique Subjects inside this Category
             const filtered = appState.data.filter(q => (q.category || 'General') === cat);
-            const subjects = [...new Set(filtered.map(q => q.subject))];
+            // Get unique Subjects
+            const subjects = [...new Set(filtered.map(q => q.subject))].sort();
             
             const grid = document.getElementById('topics-grid');
             grid.innerHTML = "";
 
             subjects.forEach(sub => {
                 const count = filtered.filter(q => q.subject === sub).length;
-                // Strip "Week X:" for cleaner display if desired
-                const displayName = sub.replace(/Week \d+: /, ""); 
+                // Remove prefixes if they exist for cleaner UI
+                const displayName = sub.replace(/Week \d+: |Module \d+: /i, ""); 
                 
                 grid.innerHTML += `
                 <div class="tile" onclick="startSession('${sub}')">
                     <span class="tile-icon">📑</span>
                     <div class="tile-name">${displayName}</div>
-                    <div style="font-size:0.75rem; color:#9ca3af; margin-top:5px;">${count} Qs</div>
+                    <div style="font-size:0.75rem; color:#9ca3af; margin-top:5px;">${count} Questions</div>
                 </div>`;
             });
         }
@@ -243,10 +306,8 @@
         }
 
         function hideAll() {
-            document.getElementById('dashboard-screen').classList.add('hidden');
-            document.getElementById('submenu-screen').classList.add('hidden');
-            document.getElementById('session-screen').classList.add('hidden');
-            document.getElementById('result-screen').classList.add('hidden');
+            const screens = ['dashboard-screen', 'submenu-screen', 'session-screen', 'result-screen', 'auth-screen', 'loading-screen'];
+            screens.forEach(id => document.getElementById(id).classList.add('hidden'));
         }
 
         function setMode(m) {
@@ -258,8 +319,10 @@
         // --- QUIZ LOGIC ---
         function startSession(subject) {
             const pool = appState.data.filter(q => q.subject === subject);
-            appState.currentSet = pool.sort(() => 0.5 - Math.random()).slice(0, 10);
-            appState.index = 0; appState.score = 0;
+            // Shuffle and slice
+            appState.currentSet = pool.sort(() => 0.5 - Math.random()).slice(0, 15);
+            appState.index = 0; 
+            appState.score = 0;
             
             hideAll();
             document.getElementById('session-screen').classList.remove('hidden');
@@ -270,7 +333,7 @@
             const q = appState.currentSet[appState.index];
             const isStudy = appState.mode === 'study';
             
-            document.getElementById('session-progress').innerText = `${appState.index + 1}/${appState.currentSet.length}`;
+            document.getElementById('session-progress').innerText = `${appState.index + 1} / ${appState.currentSet.length}`;
             document.getElementById('q-text').innerText = q.question;
             document.getElementById('rationale-area').classList.add('hidden');
             
@@ -281,31 +344,46 @@
 
             const box = document.getElementById('options-area');
             box.innerHTML = "";
-            let opts = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
+            
+            // Handle parsing options safely
+            let opts = [];
+            try {
+                opts = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
+            } catch(e) { console.error("Error parsing options", e); opts = ["Error loading options"]; }
             
             opts.forEach(opt => {
                 const b = document.createElement('button');
                 b.className = 'option-btn';
                 b.innerText = opt;
                 b.onclick = () => {
-                    if(btn.style.display !== 'none' && !isStudy) return;
+                    // Prevent changing answer in study mode after selection
+                    if(b.parentElement.querySelector('.selected')) return;
+
+                    // Deselect others
                     document.querySelectorAll('.option-btn').forEach(x => x.classList.remove('selected'));
                     b.classList.add('selected');
+                    
                     q.userSelected = opt;
-                    if(isStudy) reveal(q); else btn.classList.remove('hidden');
+                    
+                    if(isStudy) reveal(q); 
+                    else btn.classList.remove('hidden');
                 };
                 box.appendChild(b);
             });
         }
 
         function reveal(q) {
+            // Disable all buttons
             document.querySelectorAll('.option-btn').forEach(b => {
-                b.onclick = null;
+                b.classList.add('disabled'); // Add logic to disable clicks
                 if(b.innerText === q.answer) b.classList.add('correct');
                 else if(b.classList.contains('selected')) b.classList.add('wrong');
             });
-            document.getElementById('rationale-area').innerHTML = `<strong>💡 Rationale:</strong> ${q.rationale}`;
-            document.getElementById('rationale-area').classList.remove('hidden');
+            
+            // Show rationale
+            const ratBox = document.getElementById('rationale-area');
+            ratBox.innerHTML = `<strong>💡 Rationale:</strong><br>${q.rationale || "No rationale provided."}`;
+            ratBox.classList.remove('hidden');
             document.getElementById('action-btn').classList.remove('hidden');
         }
 
@@ -321,7 +399,15 @@
         function showResults() {
             hideAll();
             document.getElementById('result-screen').classList.remove('hidden');
-            document.getElementById('score-val').innerText = Math.round((appState.score / appState.currentSet.length) * 100) + "%";
+            const percentage = Math.round((appState.score / appState.currentSet.length) * 100);
+            
+            document.getElementById('score-val').innerText = percentage + "%";
+            
+            let msg = "Keep studying!";
+            if(percentage >= 80) msg = "Excellent job!";
+            else if(percentage >= 60) msg = "Good pass, but review weak areas.";
+            
+            document.getElementById('score-msg').innerText = msg;
         }
     </script>
 </body>
