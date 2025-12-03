@@ -142,45 +142,35 @@
             </div>
 
             <div id="admin-view-add" class="glass p-6 rounded-3xl">
-                <h3 class="font-bold text-lg mb-4">Question Editor</h3>
-                <div class="space-y-3">
-                    <input id="adm-cat" class="admin-input" placeholder="Category (e.g. Pharmacology)">
-                    <input id="adm-sub" class="admin-input" placeholder="Subject (e.g. Week 1)">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-lg">Question Editor</h3>
+                    <button onclick="addOption()" class="text-xs bg-brand-50 text-brand-600 px-3 py-1.5 rounded-lg font-bold hover:bg-brand-100 transition-colors">
+                        + Add Option
+                    </button>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <input id="adm-cat" class="admin-input" placeholder="Category (e.g. Pharma)">
+                        <input id="adm-sub" class="admin-input" placeholder="Subject (e.g. Week 1)">
+                    </div>
+                    
                     <textarea id="adm-q" class="admin-input h-24" placeholder="Question Text"></textarea>
                     
-                    <div class="grid grid-cols-2 gap-2">
-                        <input id="adm-opt-1" class="admin-input" placeholder="Option A">
-                        <input id="adm-opt-2" class="admin-input" placeholder="Option B">
-                        <input id="adm-opt-3" class="admin-input" placeholder="Option C">
-                        <input id="adm-opt-4" class="admin-input" placeholder="Option D">
-                    </div>
-
-                    <div class="glass bg-white/50 p-4 rounded-xl border border-gray-200">
-                        <label class="text-xs font-bold text-gray-500 uppercase mb-2 block">Correct Answer(s)</label>
-                        <div class="space-y-2">
-                            <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors">
-                                <input type="checkbox" id="adm-check-0" class="w-4 h-4 text-brand-600 rounded focus:ring-brand-500">
-                                <span class="text-sm font-medium text-gray-700">Option A is correct</span>
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors">
-                                <input type="checkbox" id="adm-check-1" class="w-4 h-4 text-brand-600 rounded focus:ring-brand-500">
-                                <span class="text-sm font-medium text-gray-700">Option B is correct</span>
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors">
-                                <input type="checkbox" id="adm-check-2" class="w-4 h-4 text-brand-600 rounded focus:ring-brand-500">
-                                <span class="text-sm font-medium text-gray-700">Option C is correct</span>
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors">
-                                <input type="checkbox" id="adm-check-3" class="w-4 h-4 text-brand-600 rounded focus:ring-brand-500">
-                                <span class="text-sm font-medium text-gray-700">Option D is correct</span>
-                            </label>
-                        </div>
+                    <div class="bg-white/50 rounded-xl border border-gray-200 p-4">
+                        <label class="text-xs font-bold text-gray-400 uppercase mb-3 block flex justify-between">
+                            <span>Options</span>
+                            <span>Correct?</span>
+                        </label>
+                        <div id="dynamic-options-container" class="space-y-3"></div>
                     </div>
 
                     <textarea id="adm-rat" class="admin-input h-20" placeholder="Rationale (Explanation)"></textarea>
                     
-                    <button onclick="submitSingleQuestion()" id="adm-submit-btn" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl shadow hover:bg-green-700 transition-colors">Save Question</button>
-                    <button onclick="resetAdminForm()" class="w-full text-xs text-gray-400 font-bold hover:text-gray-600 mt-2">Clear Form</button>
+                    <div class="flex gap-2 pt-2">
+                        <button onclick="submitSingleQuestion()" id="adm-submit-btn" class="flex-1 bg-green-600 text-white font-bold py-3 rounded-xl shadow hover:bg-green-700 transition-colors">Save Question</button>
+                        <button onclick="resetAdminForm()" class="px-4 text-gray-400 hover:text-red-500 transition-colors"><i class="ph-bold ph-trash"></i></button>
+                    </div>
                 </div>
             </div>
 
@@ -516,6 +506,7 @@
             hideAll();
             document.getElementById('admin-screen').classList.remove('hidden');
             loadAdminList();
+            resetAdminForm();
         }
 
         function setAdminTab(tab) {
@@ -525,38 +516,59 @@
             document.getElementById('admin-tab-bulk').className = tab==='bulk' ? "flex-1 py-2 rounded-lg text-xs font-bold bg-brand-600 text-white shadow" : "flex-1 py-2 rounded-lg text-xs font-bold text-gray-500";
         }
 
+        // DYNAMIC OPTIONS LOGIC
+        function addOption(text = "", isCorrect = false) {
+            const container = document.getElementById('dynamic-options-container');
+            const div = document.createElement('div');
+            div.className = "flex items-center gap-3 option-row animate-slide-up";
+            
+            div.innerHTML = `
+                <div class="flex-1 relative">
+                    <input type="text" class="adm-opt-input admin-input pr-10" placeholder="Option text..." value="${text.replace(/"/g, '&quot;')}">
+                </div>
+                <label class="cursor-pointer relative flex items-center justify-center w-10 h-10 hover:bg-gray-100 rounded-lg transition-colors" title="Mark as Correct">
+                    <input type="checkbox" class="adm-check w-5 h-5 text-green-600 rounded focus:ring-green-500 border-gray-300 cursor-pointer" ${isCorrect ? 'checked' : ''}>
+                </label>
+                <button onclick="this.parentElement.remove()" class="text-gray-300 hover:text-red-500 transition-colors p-2" title="Delete Option">
+                    <i class="ph-bold ph-x"></i>
+                </button>
+            `;
+            container.appendChild(div);
+        }
+
         async function submitSingleQuestion() {
             const cat = document.getElementById('adm-cat').value;
             const sub = document.getElementById('adm-sub').value;
             const q = document.getElementById('adm-q').value;
             const rat = document.getElementById('adm-rat').value;
-            
-            const opts = [
-                document.getElementById('adm-opt-1').value,
-                document.getElementById('adm-opt-2').value,
-                document.getElementById('adm-opt-3').value,
-                document.getElementById('adm-opt-4').value
-            ].filter(o => o.trim() !== "");
 
-            const selectedIndices = [];
-            if(document.getElementById('adm-check-0').checked) selectedIndices.push(0);
-            if(document.getElementById('adm-check-1').checked) selectedIndices.push(1);
-            if(document.getElementById('adm-check-2').checked) selectedIndices.push(2);
-            if(document.getElementById('adm-check-3').checked) selectedIndices.push(3);
+            // Gather Options
+            const rows = document.querySelectorAll('.option-row');
+            const opts = [];
+            const correctValues = [];
 
-            if(!cat || !sub || !q || opts.length < 2 || selectedIndices.length === 0) {
-                return showToast("Fill all fields & select an answer", "error");
-            }
+            rows.forEach(row => {
+                const val = row.querySelector('.adm-opt-input').value.trim();
+                const checked = row.querySelector('.adm-check').checked;
+                if(val) {
+                    opts.push(val);
+                    if(checked) correctValues.push(val);
+                }
+            });
+
+            if(!cat || !sub || !q) return showToast("Missing details", "error");
+            if(opts.length < 2) return showToast("Add at least 2 options", "error");
+            if(correctValues.length === 0) return showToast("Select a correct answer", "error");
 
             let type = 'single';
             let finalAnswer = "";
 
-            if (selectedIndices.length > 1) {
+            if (correctValues.length > 1) {
                 type = 'multi';
-                finalAnswer = JSON.stringify(selectedIndices.map(i => opts[i]));
+                finalAnswer = JSON.stringify(correctValues);
             } else {
                 type = 'single';
-                finalAnswer = opts[selectedIndices[0]];
+                finalAnswer = correctValues[0];
             }
 
             const payload = { category: cat, subject: sub, question: q, options: opts, answer: finalAnswer, rationale: rat, type: type };
@@ -591,28 +603,25 @@
             document.getElementById('adm-q').value = q.question;
             document.getElementById('adm-rat').value = q.rationale;
 
+            const container = document.getElementById('dynamic-options-container');
+            container.innerHTML = ""; 
+
             let opts = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
-            document.getElementById('adm-opt-1').value = opts[0] || "";
-            document.getElementById('adm-opt-2').value = opts[1] || "";
-            document.getElementById('adm-opt-3').value = opts[2] || "";
-            document.getElementById('adm-opt-4').value = opts[3] || "";
-
-            [0,1,2,3].forEach(i => document.getElementById(`adm-check-${i}`).checked = false);
-
-            if (q.type === 'multi') {
-                const correctArr = typeof q.answer === 'string' ? JSON.parse(q.answer) : q.answer;
-                correctArr.forEach(ans => {
-                    const idx = opts.indexOf(ans);
-                    if(idx > -1) document.getElementById(`adm-check-${idx}`).checked = true;
-                });
+            let correctArr = [];
+            if(q.type === 'multi') {
+                correctArr = typeof q.answer === 'string' ? JSON.parse(q.answer) : q.answer;
             } else {
-                const idx = opts.indexOf(q.answer);
-                if(idx > -1) document.getElementById(`adm-check-${idx}`).checked = true;
+                correctArr = [q.answer];
             }
+
+            opts.forEach(optText => {
+                const isCorrect = correctArr.includes(optText);
+                addOption(optText, isCorrect);
+            });
 
             const btn = document.getElementById('adm-submit-btn');
             btn.innerText = "Update Question";
-            btn.className = "w-full bg-amber-500 text-white font-bold py-3 rounded-xl shadow hover:bg-amber-600 transition-colors";
+            btn.className = "flex-1 bg-amber-500 text-white font-bold py-3 rounded-xl shadow hover:bg-amber-600 transition-colors";
             
             setAdminTab('add');
             showToast("Editing mode active");
@@ -621,16 +630,15 @@
         function resetAdminForm() {
             appState.editingId = null;
             document.getElementById('adm-q').value = "";
-            document.getElementById('adm-opt-1').value = "";
-            document.getElementById('adm-opt-2').value = "";
-            document.getElementById('adm-opt-3').value = "";
-            document.getElementById('adm-opt-4').value = "";
             document.getElementById('adm-rat').value = "";
-            [0,1,2,3].forEach(i => document.getElementById(`adm-check-${i}`).checked = false);
+            
+            const container = document.getElementById('dynamic-options-container');
+            container.innerHTML = "";
+            addOption(); addOption(); addOption(); addOption();
             
             const btn = document.getElementById('adm-submit-btn');
             btn.innerText = "Save Question";
-            btn.className = "w-full bg-green-600 text-white font-bold py-3 rounded-xl shadow hover:bg-green-700 transition-colors";
+            btn.className = "flex-1 bg-green-600 text-white font-bold py-3 rounded-xl shadow hover:bg-green-700 transition-colors";
         }
 
         async function submitBulk() {
