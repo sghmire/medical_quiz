@@ -41,6 +41,8 @@
         .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
         .glass-dark { background: rgba(17, 24, 39, 0.8); backdrop-filter: blur(12px); color: white; border: 1px solid rgba(255, 255, 255, 0.1); }
         .loader { width: 18px; height: 18px; border: 2px solid #FFF; border-bottom-color: transparent; border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; }
+        .icon-radio { border-radius: 50%; } /* Circle */
+        .icon-check { border-radius: 6px; } /* Square */
         @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         /* Admin Input Style */
         .admin-input { width: 100%; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 0.75rem; font-size: 0.875rem; transition: all 0.2s; }
@@ -138,6 +140,7 @@
                 <div class="space-y-3">
                     <input id="adm-cat" class="admin-input" placeholder="Category (e.g. Pharmacology)">
                     <input id="adm-sub" class="admin-input" placeholder="Subject (e.g. Week 1)">
+                    
                     <textarea id="adm-q" class="admin-input h-24" placeholder="Question Text"></textarea>
                     
                     <div class="grid grid-cols-2 gap-2">
@@ -146,18 +149,33 @@
                         <input id="adm-opt-3" class="admin-input" placeholder="Option C">
                         <input id="adm-opt-4" class="admin-input" placeholder="Option D">
                     </div>
-
-                    <select id="adm-ans" class="admin-input">
-                        <option value="" disabled selected>Select Correct Answer...</option>
-                        <option value="0">Option A</option>
-                        <option value="1">Option B</option>
-                        <option value="2">Option C</option>
-                        <option value="3">Option D</option>
-                    </select>
-
+            
+                    <div class="glass bg-white/50 p-4 rounded-xl border border-gray-200">
+                        <label class="text-xs font-bold text-gray-500 uppercase mb-2 block">Correct Answer(s)</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors">
+                                <input type="checkbox" id="adm-check-0" class="w-4 h-4 text-brand-600 rounded focus:ring-brand-500">
+                                <span class="text-sm font-medium text-gray-700">Option A is correct</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors">
+                                <input type="checkbox" id="adm-check-1" class="w-4 h-4 text-brand-600 rounded focus:ring-brand-500">
+                                <span class="text-sm font-medium text-gray-700">Option B is correct</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors">
+                                <input type="checkbox" id="adm-check-2" class="w-4 h-4 text-brand-600 rounded focus:ring-brand-500">
+                                <span class="text-sm font-medium text-gray-700">Option C is correct</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors">
+                                <input type="checkbox" id="adm-check-3" class="w-4 h-4 text-brand-600 rounded focus:ring-brand-500">
+                                <span class="text-sm font-medium text-gray-700">Option D is correct</span>
+                            </label>
+                        </div>
+                    </div>
+            
                     <textarea id="adm-rat" class="admin-input h-20" placeholder="Rationale (Explanation)"></textarea>
                     
                     <button onclick="submitSingleQuestion()" id="adm-submit-btn" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl shadow hover:bg-green-700 transition-colors">Save Question</button>
+                    <button onclick="resetAdminForm()" class="w-full text-xs text-gray-400 font-bold hover:text-gray-600 mt-2">Clear Form</button>
                 </div>
             </div>
 
@@ -327,42 +345,176 @@
             loadCard();
         }
 
-        function loadCard() {
+       function loadCard() {
             const q = appState.currentSet[appState.index];
+            const isStudy = appState.mode === 'study';
+            
+            // UI Updates
             document.getElementById('q-text').innerText = q.question;
             document.getElementById('session-progress').innerText = `${appState.index+1}/${appState.currentSet.length}`;
             document.getElementById('rationale-area').classList.add('hidden');
-            document.getElementById('action-btn').classList.add('hidden');
             
+            // Important: For Multi-select, we ALWAYS need a submit button, even in study mode
+            const actionBtn = document.getElementById('action-btn');
+            actionBtn.classList.add('hidden');
+            
+            // Reset User Selection
+            q.userSelected = q.type === 'multi' ? [] : null; 
+        
             const box = document.getElementById('options-area');
             box.innerHTML = "";
-            let opts = typeof q.options==='string'?JSON.parse(q.options):q.options;
+            
+            // Create Tag for "Select All That Apply"
+            if(q.type === 'multi') {
+                const hint = document.createElement('div');
+                hint.className = "text-xs font-bold text-brand-600 uppercase mb-2 tracking-wider";
+                hint.innerText = "Select All That Apply";
+                box.appendChild(hint);
+            }
+        
+            let opts = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
             
             opts.forEach(opt => {
                 const btn = document.createElement('button');
-                btn.className = "w-full text-left p-4 rounded-xl bg-white border border-gray-100 hover:border-brand-500 transition-all shadow-sm";
-                btn.innerText = opt;
+                // Base styling
+                btn.className = "w-full text-left p-4 rounded-xl bg-white border border-gray-100 hover:border-brand-500 transition-all shadow-sm mb-2 group";
+                
+                // Icon based on type
+                const iconShape = q.type === 'multi' ? 'icon-check' : 'icon-radio';
+                
+                btn.innerHTML = `
+                    <div class="flex items-start gap-3 pointer-events-none">
+                        <div class="mt-1 w-5 h-5 border-2 border-gray-300 group-hover:border-brand-400 flex items-center justify-center transition-colors ${iconShape}">
+                            <div class="w-2.5 h-2.5 bg-brand-500 opacity-0 transition-opacity ${iconShape} check-mark"></div>
+                        </div>
+                        <span class="flex-1 text-gray-700 font-medium leading-relaxed">${opt}</span>
+                    </div>`;
+        
                 btn.onclick = () => {
-                    if(document.querySelector('.selected')) return;
-                    btn.classList.add('selected','bg-brand-50','border-brand-500');
-                    q.userSelected = opt;
-                    if(appState.mode === 'study') reveal(q, btn);
-                    else { document.getElementById('action-btn').classList.remove('hidden'); document.getElementById('action-btn').onclick = nextCard; }
-                }
+                    // IF SINGLE CHOICE
+                    if (q.type !== 'multi') {
+                        if(document.querySelector('.selected')) return; // Block logic if already answered
+                        
+                        // Visually select
+                        document.querySelectorAll('.selected').forEach(el => {
+                            el.classList.remove('selected', 'bg-brand-50', 'border-brand-500');
+                            el.querySelector('.check-mark').classList.add('opacity-0');
+                        });
+                        
+                        btn.classList.add('selected', 'bg-brand-50', 'border-brand-500');
+                        btn.querySelector('.check-mark').classList.remove('opacity-0');
+                        
+                        q.userSelected = opt;
+                        
+                        // In Study mode, reveal immediately. In Test mode, wait for button.
+                        if(isStudy) reveal(q);
+                        else {
+                            actionBtn.innerText = "Submit Answer";
+                            actionBtn.classList.remove('hidden');
+                            actionBtn.onclick = () => reveal(q); // Test mode reveal logic
+                        }
+                    } 
+                    // IF MULTI SELECT
+                    else {
+                        if(btn.disabled) return; // Prevent clicking after submit
+                        
+                        const isSelected = btn.classList.contains('selected');
+                        
+                        // Toggle Visuals
+                        if (isSelected) {
+                            btn.classList.remove('selected', 'bg-brand-50', 'border-brand-500');
+                            btn.querySelector('.check-mark').classList.add('opacity-0');
+                            // Remove from array
+                            q.userSelected = q.userSelected.filter(item => item !== opt);
+                        } else {
+                            btn.classList.add('selected', 'bg-brand-50', 'border-brand-500');
+                            btn.querySelector('.check-mark').classList.remove('opacity-0');
+                            // Add to array
+                            q.userSelected.push(opt);
+                        }
+        
+                        // Show Submit Button immediately when at least one is selected
+                        if(q.userSelected.length > 0) {
+                            actionBtn.innerText = "Submit Answer";
+                            actionBtn.classList.remove('hidden');
+                            actionBtn.onclick = () => reveal(q);
+                        } else {
+                            actionBtn.classList.add('hidden');
+                        }
+                    }
+                };
                 box.appendChild(btn);
             });
         }
 
-        function reveal(q, btn) {
+        function reveal(q) {
             const opts = document.querySelectorAll('#options-area button');
+            let isCorrect = false;
+        
+            // --- CHECK ANSWER ---
+            if(q.type === 'multi') {
+                // Parse correct answers (stored as JSON string in DB)
+                const correctArr = typeof q.answer === 'string' ? JSON.parse(q.answer) : q.answer;
+                
+                // Sort both arrays to compare them regardless of order
+                const userSorted = JSON.stringify(q.userSelected.sort());
+                const correctSorted = JSON.stringify(correctArr.sort());
+                
+                isCorrect = (userSorted === correctSorted);
+            } else {
+                // Simple string comparison for Single Choice
+                isCorrect = (q.userSelected === q.answer);
+            }
+        
+            // --- COLOR THE BUTTONS ---
             opts.forEach(b => {
-                if(b.innerText === q.answer) { b.classList.remove('bg-white'); b.classList.add('bg-green-100','border-green-500','text-green-800'); }
-                else if(b === btn) { b.classList.remove('bg-brand-50'); b.classList.add('bg-red-100','border-red-500','text-red-800'); }
+                b.disabled = true; // Stop interaction
+                b.style.cursor = 'default';
+                const text = b.innerText.trim();
+                
+                // Logic to highlight Correct vs Wrong
+                const isSelected = b.classList.contains('selected');
+                
+                // Is this option one of the correct answers?
+                let isThisCorrectOption = false;
+                if(q.type === 'multi') {
+                    const correctArr = typeof q.answer === 'string' ? JSON.parse(q.answer) : q.answer;
+                    isThisCorrectOption = correctArr.includes(text);
+                } else {
+                    isThisCorrectOption = (text === q.answer);
+                }
+        
+                // Apply Colors
+                if (isThisCorrectOption) {
+                    // It was a correct answer
+                    b.classList.remove('bg-white', 'bg-brand-50', 'border-brand-500', 'border-gray-100');
+                    b.classList.add('bg-green-100', 'border-green-500', 'text-green-900');
+                    // Add Checkmark Icon if missing
+                    if(!b.innerHTML.includes('ph-check')) {
+                        b.innerHTML += `<i class="ph-bold ph-check text-green-600 absolute right-4 top-1/2 -translate-y-1/2 text-xl"></i>`;
+                        b.classList.add('relative');
+                    }
+                } else if (isSelected && !isThisCorrectOption) {
+                    // User picked it, but it was wrong
+                    b.classList.remove('bg-brand-50', 'border-brand-500');
+                    b.classList.add('bg-red-100', 'border-red-500', 'text-red-900');
+                } else {
+                    // Not selected, not correct (Fade it out)
+                    b.classList.add('opacity-50');
+                }
             });
+        
+            // Update Score (Only if in Test mode)
+            if(appState.mode === 'test' && isCorrect) appState.score++;
+        
+            // Show Rationale & Next Button
             document.getElementById('rationale-text').innerText = q.rationale || "No rationale.";
             document.getElementById('rationale-area').classList.remove('hidden');
-            document.getElementById('action-btn').classList.remove('hidden');
-            document.getElementById('action-btn').onclick = nextCard;
+            
+            const btn = document.getElementById('action-btn');
+            btn.innerText = "Next Question";
+            btn.classList.remove('hidden');
+            btn.onclick = nextCard;
         }
 
         function nextCard() {
@@ -402,38 +554,59 @@
             const cat = document.getElementById('adm-cat').value;
             const sub = document.getElementById('adm-sub').value;
             const q = document.getElementById('adm-q').value;
+            const rat = document.getElementById('adm-rat').value;
+            
+            // Get Options
             const opts = [
                 document.getElementById('adm-opt-1').value,
                 document.getElementById('adm-opt-2').value,
                 document.getElementById('adm-opt-3').value,
                 document.getElementById('adm-opt-4').value
             ].filter(o => o.trim() !== "");
-            
-            const ansIndex = document.getElementById('adm-ans').value;
-            const rat = document.getElementById('adm-rat').value;
         
-            if(!cat || !sub || !q || opts.length < 2 || !ansIndex) return showToast("Fill all fields", "error");
+            // Get Selected Answers (Indices)
+            const selectedIndices = [];
+            if(document.getElementById('adm-check-0').checked) selectedIndices.push(0);
+            if(document.getElementById('adm-check-1').checked) selectedIndices.push(1);
+            if(document.getElementById('adm-check-2').checked) selectedIndices.push(2);
+            if(document.getElementById('adm-check-3').checked) selectedIndices.push(3);
+        
+            if(!cat || !sub || !q || opts.length < 2 || selectedIndices.length === 0) {
+                return showToast("Fill all fields & select at least one answer", "error");
+            }
+        
+            // Determine Type & Answer Format
+            let type = 'single';
+            let finalAnswer = "";
+        
+            if (selectedIndices.length > 1) {
+                type = 'multi';
+                // For multi, answer is JSON string array: '["Option A", "Option C"]'
+                const ansArray = selectedIndices.map(i => opts[i]);
+                finalAnswer = JSON.stringify(ansArray);
+            } else {
+                type = 'single';
+                // For single, answer is just string: "Option A"
+                finalAnswer = opts[selectedIndices[0]];
+            }
         
             const payload = {
                 category: cat,
                 subject: sub,
                 question: q,
-                options: opts,
-                answer: opts[parseInt(ansIndex)],
-                rationale: rat
+                options: opts, // Supabase stores JSON array automatically
+                answer: finalAnswer,
+                rationale: rat,
+                type: type // <--- New Field
             };
         
             showLoading(true);
         
             let error;
-            
-            // --- CHECK: ARE WE EDITING OR CREATING? ---
             if (appState.editingId) {
-                // UPDATE EXISTING
                 const res = await _supabase.from('questions').update(payload).eq('id', appState.editingId);
                 error = res.error;
             } else {
-                // CREATE NEW
                 const res = await _supabase.from('questions').insert(payload);
                 error = res.error;
             }
@@ -441,13 +614,12 @@
             showLoading(false);
         
             if(error) {
-                showToast("Failed to save", "error");
+                console.error(error);
+                showToast("Failed to save: " + error.message, "error");
             } else {
-                showToast(appState.editingId ? "Updated successfully!" : "Question Added!");
-                resetAdminForm(); // Clear inputs
-                loadData(); // Fetch new data
-                // We don't call loadAdminList here because loadData will trigger a refresh eventually, 
-                // or we can wait for the user to navigate.
+                showToast(appState.editingId ? "Updated!" : "Saved!");
+                resetAdminForm();
+                loadData();
             }
         }
 
@@ -511,40 +683,48 @@
         }
 
         function editQuestion(id) {
-                const q = appState.data.find(x => x.id == id);
-                if(!q) return;
+            const q = appState.data.find(x => x.id == id);
+            if(!q) return;
+        
+            appState.editingId = id;
+        
+            // Populate Text Fields
+            document.getElementById('adm-cat').value = q.category;
+            document.getElementById('adm-sub').value = q.subject;
+            document.getElementById('adm-q').value = q.question;
+            document.getElementById('adm-rat').value = q.rationale;
+        
+            // Populate Options
+            let opts = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
+            document.getElementById('adm-opt-1').value = opts[0] || "";
+            document.getElementById('adm-opt-2').value = opts[1] || "";
+            document.getElementById('adm-opt-3').value = opts[2] || "";
+            document.getElementById('adm-opt-4').value = opts[3] || "";
+        
+            // Reset Checkboxes
+            [0,1,2,3].forEach(i => document.getElementById(`adm-check-${i}`).checked = false);
+        
+            // Populate Checkboxes based on Answer
+            if (q.type === 'multi') {
+                const correctArr = typeof q.answer === 'string' ? JSON.parse(q.answer) : q.answer;
+                correctArr.forEach(ans => {
+                    const idx = opts.indexOf(ans);
+                    if(idx > -1) document.getElementById(`adm-check-${idx}`).checked = true;
+                });
+            } else {
+                const idx = opts.indexOf(q.answer);
+                if(idx > -1) document.getElementById(`adm-check-${idx}`).checked = true;
+            }
+        
+            // UI Updates
+            const btn = document.getElementById('adm-submit-btn');
+            btn.innerText = "Update Question";
+            btn.className = "w-full bg-amber-500 text-white font-bold py-3 rounded-xl shadow hover:bg-amber-600 transition-colors";
             
-                appState.editingId = id; // Turn on "Edit Mode"
-            
-                // 1. Populate the form fields
-                document.getElementById('adm-cat').value = q.category;
-                document.getElementById('adm-sub').value = q.subject;
-                document.getElementById('adm-q').value = q.question;
-                document.getElementById('adm-rat').value = q.rationale;
-            
-                // 2. Handle Options (JSON parsing safety)
-                let opts = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
-                document.getElementById('adm-opt-1').value = opts[0] || "";
-                document.getElementById('adm-opt-2').value = opts[1] || "";
-                document.getElementById('adm-opt-3').value = opts[2] || "";
-                document.getElementById('adm-opt-4').value = opts[3] || "";
-            
-                // 3. Set the Correct Answer Select Box
-                // We have to find which index matches the answer string
-                const ansIndex = opts.indexOf(q.answer);
-                if(ansIndex > -1) document.getElementById('adm-ans').value = ansIndex;
-            
-                // 4. Change UI to look like "Edit Mode"
-                const btn = document.getElementById('adm-submit-btn');
-                btn.innerText = "Update Question";
-                btn.className = "w-full bg-amber-500 text-white font-bold py-3 rounded-xl shadow hover:bg-amber-600 transition-colors";
-                
-                // 5. Switch to "Add" tab automatically so user sees the form
-                setAdminTab('add');
-                document.getElementById('adm-cat').focus();
-                showToast("Editing mode active", "success");
-          }
-
+            setAdminTab('add');
+            showToast("Editing mode active", "success");
+        }
+        
         function resetAdminForm() {
                 appState.editingId = null;
                 document.getElementById('adm-q').value = "";
